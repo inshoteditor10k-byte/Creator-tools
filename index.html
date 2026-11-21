@@ -1,292 +1,2637 @@
 <!DOCTYPE html>
-<html lang="hi"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Creator Connect</title>
-<style>
-:root{--bg:#0b0b12;--card:#161622;--tx:#f3f3f8;--mut:#8b8ba3;--ac:#8b5cf6;--ac2:#ec4899;--bd:#26263a;--ok:#22c55e;--er:#ef4444}
-:root[data-t=light]{--bg:#f5f5fa;--card:#fff;--tx:#14141f;--mut:#6b6b80;--bd:#e4e4ee}
-*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;max-width:560px;margin:auto;min-height:100vh;padding-bottom:76px}
-header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--bd)}
-.logo{font-weight:800;font-size:20px;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;color:transparent}
-button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
-.btn{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;padding:10px 18px;border-radius:12px;font-weight:600}
-.btn.g{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
-.btn.s{padding:6px 12px;font-size:13px}
-input,textarea,select{width:100%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:11px;font:inherit;margin:6px 0}
-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;background:var(--card);border-top:1px solid var(--bd);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
-nav button{flex:1;font-size:21px;opacity:.5;position:relative}nav button.on{opacity:1}
-nav small{display:block;font-size:10px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;margin:12px;overflow:hidden}
-.pad{padding:12px}.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}
-.av{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
-.av.l{width:84px;height:84px}
-.post img.ph{width:100%;max-height:560px;object-fit:cover;display:block}
-.mut{color:var(--mut);font-size:13px}.tag{color:var(--ac)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;cursor:pointer}
-.badge{background:var(--er);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;position:absolute;top:-4px;margin-left:-6px}
-.pro{background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;border-radius:6px;font-size:10px;padding:2px 6px;font-weight:700}
-.msgs{display:flex;flex-direction:column;gap:6px;padding:12px;min-height:60vh}
-.m{max-width:78%;padding:9px 12px;border-radius:16px;background:var(--card);border:1px solid var(--bd);word-wrap:break-word}
-.m.me{align-self:flex-end;background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;border:0}
-.m img{max-width:100%;border-radius:10px}.m .rp{font-size:12px;opacity:.7;border-left:3px solid #fff7;padding-left:6px;margin-bottom:4px}
-.sk{height:300px;margin:12px;border-radius:16px;background:linear-gradient(90deg,var(--card),var(--bd),var(--card));background-size:200% 100%;animation:sh 1.2s infinite}
-@keyframes sh{to{background-position:-200% 0}}
-#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;gap:6px}
-#toast div{background:var(--card);border:1px solid var(--bd);padding:10px 16px;border-radius:12px;animation:in .25s}
-@keyframes in{from{opacity:0;transform:translateY(-8px)}}
-.empty{text-align:center;color:var(--mut);padding:50px 20px}
-.welcome{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px;gap:16px;background:radial-gradient(circle at 50% 0,#8b5cf633,transparent 60%)}
-.chatbar{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:var(--bg);padding:8px 12px;border-top:1px solid var(--bd);z-index:4}
-.chatbar .row input{margin:0}
-.x{color:var(--er)}
-</style></head><body>
-<div id="toast"></div><div id="app"></div>
-<script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,addDoc,collection,query,where,orderBy,limit,startAfter,getDocs,getCountFromServer,onSnapshot,writeBatch,increment,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-const app=initializeApp({apiKey:"AIzaSyDNmvJiJtM3VcHzFNGRHTYfrNn2TcGGDzk",authDomain:"ytcr-7b883.firebaseapp.com",projectId:"ytcr-7b883",storageBucket:"ytcr-7b883.firebasestorage.app",messagingSenderId:"1002788979175",appId:"1:1002788979175:web:92fb36779a67d155adbd42"});
-const auth=getAuth(app),db=getFirestore(app),st=getStorage(app);
-const $=s=>document.querySelector(s),A=$('#app');
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const toast=m=>{const d=document.createElement('div');d.textContent=m;$('#toast').append(d);setTimeout(()=>d.remove(),3200)};
-const DEF='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#8b5cf6"/><circle cx="20" cy="15" r="7" fill="#fff"/><rect x="8" y="25" width="24" height="15" rx="8" fill="#fff"/></svg>');
-const LIMIT=150,today=()=>new Date().toISOString().slice(0,10).replace(/-/g,'');
-const words=t=>(t.trim().match(/\S+/g)||[]).length;
-let me=null,prof=null,view='home',unsubs=[],theme=localStorage.getItem('t')||'dark',lastDoc=null;
-document.documentElement.dataset.t=theme;
-const clear=()=>{unsubs.forEach(u=>u());unsubs=[]};
-const uref=id=>doc(db,'users',id);
-const getU=async id=>{const s=await getDoc(uref(id));return s.exists()?{id,...s.data()}:{id,username:'user',displayName:'User'}};
-const ts=t=>t?.toDate?t.toDate().toLocaleString('hi-IN',{dateStyle:'medium',timeStyle:'short'}):'';
-const notify=(to,type,text)=>to!==me.uid&&addDoc(collection(db,'users',to,'notifications'),{type,text,from:me.uid,read:false,createdAt:serverTimestamp()}).catch(()=>{});
-/* ---------- AUTH ---------- */
-onAuthStateChanged(auth,async u=>{
- clear();me=u;
- if(!u){prof=null;return welcome()}
- const s=await getDoc(uref(u.uid));
- if(!s.exists())return setup();
- prof={id:u.uid,...s.data()};
- updateDoc(uref(u.uid),{online:true,lastSeen:serverTimestamp()}).catch(()=>{});
- shell();go('home');
-});
-addEventListener('visibilitychange',()=>me&&prof&&updateDoc(uref(me.uid),{online:!document.hidden,lastSeen:serverTimestamp()}).catch(()=>{}));
-function welcome(){A.innerHTML=`<div class="welcome"><div class="logo" style="font-size:38px">Creator Connect</div><p class="mut">Creators के लिए Premium Social Network.<br>अपना काम दिखाएँ, जुड़ें और बढ़ें।</p><button class="btn" id="g">🔐 Continue with Google</button></div>`;
- $('#g').onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>toast('Login असफल: '+e.code))}
-function setup(){A.innerHTML=`<div class="pad"><h2>Profile Setup</h2><p class="mut">अपनी पहचान बनाइए</p>
-<div class="row" style="margin:14px 0"><img class="av l" id="pv" src="${esc(me.photoURL||DEF)}"><input type="file" id="pf" accept="image/jpeg,image/png,image/webp"></div>
-<input id="dn" placeholder="Display Name" maxlength="40" value="${esc(me.displayName||'')}">
-<input id="un" placeholder="username (a-z, 0-9, _ , 3-20)" maxlength="20">
-<textarea id="bio" rows="3" maxlength="150" placeholder="Bio"></textarea>
-<button class="btn" id="sv" style="width:100%">Save & Continue</button><button class="btn g" id="lo" style="width:100%;margin-top:8px">Logout</button></div>`;
- $('#lo').onclick=()=>signOut(auth);
- $('#sv').onclick=async()=>{
-  const dn=$('#dn').value.trim(),un=$('#un').value.trim().toLowerCase(),bio=$('#bio').value.trim();
-  if(!dn)return toast('नाम लिखें');
-  if(!/^[a-z0-9_]{3,20}$/.test(un))return toast('Username: 3-20 अक्षर, a-z 0-9 _');
-  $('#sv').disabled=true;
-  try{
-   const f=$('#pf').files[0];let photo=me.photoURL||'';
-   if(f){photo=await upload(f,`avatars/${me.uid}/${Date.now()}`)}
-   const b=writeBatch(db);
-   b.set(doc(db,'usernames',un),{uid:me.uid});
-   b.set(uref(me.uid),{displayName:dn,username:un,bio,photoURL:photo,coverURL:'',isPrivate:false,pro:false,online:true,createdAt:serverTimestamp()});
-   await b.commit();location.reload();
-  }catch(e){toast(e.code==='permission-denied'?'यह Username पहले से लिया जा चुका है':'Error: '+e.message);$('#sv').disabled=false}}}
-async function upload(f,path){
- if(!['image/jpeg','image/png','image/webp'].includes(f.type))throw Error('केवल JPG/PNG/WEBP');
- if(f.size>5*1024*1024)throw Error('फाइल 5MB से छोटी हो');
- const r=ref(st,path);await uploadBytes(r,f);return getDownloadURL(r)}
-/* ---------- SHELL ---------- */
-function shell(){
- A.innerHTML=`<header><span class="logo">Creator Connect</span><div class="row"><button id="th">🌓</button><button id="bell">🔔<span class="badge" id="nb" hidden></span></button></div></header><main id="v"></main>
- <nav>${[['home','🏠','Home'],['explore','🔍','Explore'],['create','➕','Create'],['msgs','💬','Chats'],['profile','👤','Profile']].map(([k,i,l])=>`<button data-k="${k}">${i}<small>${l}</small></button>`).join('')}</nav>`;
- document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.k));
- $('#th').onclick=()=>{theme=theme==='dark'?'light':'dark';localStorage.setItem('t',theme);document.documentElement.dataset.t=theme};
- $('#bell').onclick=()=>go('notif');
- onSnapshot(query(collection(db,'users',me.uid,'notifications'),where('read','==',false)),s=>{const n=$('#nb');if(n){n.hidden=!s.size;n.textContent=s.size}});
-}
-function go(v,arg){clear();view=v;lastDoc=null;
- document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===v||(v==='chat'&&b.dataset.k==='msgs')||(v==='user'&&arg===me.uid&&b.dataset.k==='profile')));
- const m=$('#v');m.innerHTML='<div class="sk"></div><div class="sk"></div>';scrollTo(0,0);
- ({home:()=>feed(m,false),explore:()=>feed(m,true),create:()=>create(m),msgs:()=>chats(m),chat:()=>chat(m,arg),profile:()=>userPage(m,me.uid),user:()=>userPage(m,arg),notif:()=>notifs(m),users:()=>explore2(m)})[v]()}
-/* ---------- FEED ---------- */
-async function feed(m,trend){
- m.innerHTML=trend?`<div class="pad"><input id="sq" placeholder="🔍 Username खोजें"><div id="sr"></div></div><h3 class="pad">🔥 Trending</h3><div id="fl"></div>`:`<div id="fl"></div>`;
- if(trend)$('#sq').oninput=async e=>{const q=e.target.value.trim().toLowerCase();if(q.length<2)return $('#sr').innerHTML='';
-  const s=await getDocs(query(collection(db,'users'),where('username','>=',q),where('username','<=',q+'\uf8ff'),limit(8)));
-  $('#sr').innerHTML=s.docs.map(d=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${d.id}"><img class="av" src="${esc(d.data().photoURL||DEF)}"><b>@${esc(d.data().username)}</b></div>`).join('')||'<p class="mut">कोई नहीं मिला</p>';
-  $('#sr').querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('user',e.dataset.u))};
- await more(trend);
-}
-async function more(trend){
- const fl=$('#fl');
- const q=query(collection(db,'posts'),where('status','==','approved'),orderBy(trend?'likeCount':'createdAt','desc'),...(lastDoc?[startAfter(lastDoc)]:[]),limit(8));
- let s;try{s=await getDocs(q)}catch(e){fl.innerHTML=`<div class="empty">Index चाहिए: Console में दिख रहा Firestore index link खोलकर बनाएँ।<br><small>${esc(e.message)}</small></div>`;return}
- if(!lastDoc)fl.innerHTML='';
- if(!s.size&&!lastDoc){fl.innerHTML='<div class="empty">📷<br>अभी कोई Approved Post नहीं है</div>';return}
- lastDoc=s.docs[s.docs.length-1]||lastDoc;
- for(const d of s.docs)fl.append(await postEl({id:d.id,...d.data()}));
- document.querySelector('#more')?.remove();
- if(s.size===8){const b=document.createElement('button');b.id='more';b.className='btn g';b.style.cssText='display:block;margin:12px auto';b.textContent='और दिखाएँ';b.onclick=()=>more(trend);fl.after(b)}
-}
-async function postEl(p,own){
- const u=await getU(p.uid),el=document.createElement('div');el.className='card post';
- const lk=await getDoc(doc(db,'posts',p.id,'likes',me.uid)),sv=await getDoc(doc(db,'users',me.uid,'saves',p.id));
- let liked=lk.exists(),saved=sv.exists(),lc=p.likeCount||0;
- const tags=(p.caption||'').split(/(#\w+)/g).map(x=>x.startsWith('#')?`<span class="tag">${esc(x)}</span>`:esc(x)).join('');
- el.innerHTML=`<div class="pad row sp"><div class="row" style="cursor:pointer" data-o><img class="av" src="${esc(u.photoURL||DEF)}"><div><b>@${esc(u.username)}</b> ${u.pro?'<span class="pro">PRO</span>':''}<div class="mut">${ts(p.createdAt)}</div></div></div>
- ${p.uid===me.uid?'<button class="x" data-del>🗑</button>':`<button class="btn s g" data-f></button>`}</div>
- <img class="ph" src="${esc(p.url)}" loading="lazy">
- <div class="pad row sp"><div class="row" style="gap:16px;font-size:22px"><button data-l></button><button data-c>💬</button><button data-s>↗️</button></div><button data-sv style="font-size:22px"></button></div>
- <div class="pad" style="padding-top:0"><b data-lc></b><div>${tags}</div>${own&&p.status!=='approved'?`<div class="mut" style="margin-top:6px">Status: <b>${p.status==='pending'?'⏳ Pending':'❌ Rejected'}</b> ${esc(p.reason||'')}</div>`:''}<div data-cm hidden></div></div>`;
- const q=s=>el.querySelector(s),paint=()=>{q('[data-l]').textContent=liked?'❤️':'🤍';q('[data-lc]').textContent=lc+' likes';q('[data-sv]').textContent=saved?'🔖':'📑'};paint();
- q('[data-o]').onclick=()=>go('user',p.uid);
- q('[data-l]').onclick=async()=>{const b=writeBatch(db);const lr=doc(db,'posts',p.id,'likes',me.uid);
-  if(liked){b.delete(lr);b.update(doc(db,'posts',p.id),{likeCount:increment(-1)});lc--}else{b.set(lr,{at:serverTimestamp()});b.update(doc(db,'posts',p.id),{likeCount:increment(1)});lc++;notify(p.uid,'like','@'+prof.username+' ने आपकी फोटो Like की')}
-  liked=!liked;paint();b.commit().catch(()=>toast('Error'))};
- q('[data-sv]').onclick=async()=>{const r=doc(db,'users',me.uid,'saves',p.id);saved?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});saved=!saved;paint()};
- q('[data-s]').onclick=async()=>{const url=p.url;try{navigator.share?await navigator.share({title:'Creator Connect',text:p.caption,url}):(await navigator.clipboard.writeText(url),toast('Link copy हुआ'))}catch{}};
- const del=q('[data-del]');if(del)del.onclick=async()=>{if(!confirm('फोटो Delete करें?'))return;await deleteDoc(doc(db,'posts',p.id));if(p.path)deleteObject(ref(st,p.path)).catch(()=>{});el.remove();toast('Delete हुआ')};
- const fb=q('[data-f]');if(fb)followBtn(fb,p.uid,u);
- q('[data-c]').onclick=()=>comments(q('[data-cm]'),p);
- return el}
-async function comments(box,p){
- if(!box.hidden){box.hidden=true;return}box.hidden=false;
- box.innerHTML=`<div data-list></div><div class="row"><input placeholder="Comment लिखें..." maxlength="300"><button class="btn s">Send</button></div>`;
- let reply=null;const inp=box.querySelector('input');
- const un=onSnapshot(query(collection(db,'posts',p.id,'comments'),orderBy('createdAt','asc'),limit(100)),async s=>{
-  const l=box.querySelector('[data-list]');const top=s.docs.filter(d=>!d.data().parent),rep=s.docs.filter(d=>d.data().parent);
-  const h=async(d,sub)=>{const c=d.data(),u=await getU(c.uid);return`<div style="margin:8px 0 8px ${sub?24:0}px"><b>@${esc(u.username)}</b> ${esc(c.text)} <button class="mut" data-r="${d.id}" data-n="${esc(u.username)}">Reply</button>${c.uid===me.uid?`<button class="x" data-d="${d.id}">✕</button>`:''}</div>`};
-  let out='';for(const d of top){out+=await h(d,0);for(const r of rep.filter(r=>r.data().parent===d.id))out+=await h(r,1)}
-  l.innerHTML=out||'<p class="mut">पहला Comment करें</p>';
-  l.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{reply=b.dataset.r;inp.placeholder='@'+b.dataset.n+' को Reply...';inp.focus()});
-  l.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>deleteDoc(doc(db,'posts',p.id,'comments',b.dataset.d)))});
- unsubs.push(un);
- box.querySelector('button.btn').onclick=async()=>{const t=inp.value.trim();if(!t)return;
-  await addDoc(collection(db,'posts',p.id,'comments'),{uid:me.uid,text:t.slice(0,300),parent:reply,createdAt:serverTimestamp()});
-  notify(p.uid,'comment','@'+prof.username+' ने Comment किया: '+t.slice(0,40));inp.value='';reply=null;inp.placeholder='Comment लिखें...'}}
-/* ---------- FOLLOW ---------- */
-async function followBtn(btn,target,tu){
- const fid=me.uid+'_'+target,fr=doc(db,'follows',fid);
- const paint=async()=>{const s=await getDoc(fr);btn.textContent=!s.exists()?'Follow':s.data().status==='pending'?'Requested':'Following';btn.dataset.s=s.exists()?s.data().status:''};
- await paint();
- btn.onclick=async()=>{
-  if(btn.dataset.s){await deleteDoc(fr)}
-  else{const priv=(tu||await getU(target)).isPrivate;
-   await setDoc(fr,{from:me.uid,to:target,status:priv?'pending':'accepted',createdAt:serverTimestamp()});
-   notify(target,priv?'req':'follow','@'+prof.username+(priv?' ने Follow Request भेजी':' ने आपको Follow किया'))}
-  paint()}}
-/* ---------- CREATE ---------- */
-function create(m){
- m.innerHTML=`<div class="pad"><h2>नई Post</h2><p class="mut">Admin Approval के बाद ही Public Feed में दिखेगी।</p>
- <input type="file" id="cf" accept="image/jpeg,image/png,image/webp"><img id="cp" style="width:100%;border-radius:12px;display:none">
- <textarea id="cc" rows="3" maxlength="500" placeholder="Caption और #hashtags"></textarea><button class="btn" id="cu" style="width:100%">Upload करें</button></div>`;
- $('#cf').onchange=e=>{const f=e.target.files[0];if(f){$('#cp').src=URL.createObjectURL(f);$('#cp').style.display='block'}};
- $('#cu').onclick=async()=>{const f=$('#cf').files[0];if(!f)return toast('फोटो चुनें');$('#cu').disabled=true;
-  try{const id=doc(collection(db,'posts')).id,path=`posts/${me.uid}/${id}`,url=await upload(f,path),cap=$('#cc').value.trim();
-   await setDoc(doc(db,'posts',id),{uid:me.uid,url,path,caption:cap,tags:(cap.match(/#\w+/g)||[]).map(t=>t.toLowerCase()),status:'pending',reason:'',likeCount:0,createdAt:serverTimestamp()});
-   toast('Upload हुआ — Admin Approval Pending ⏳');go('profile')}catch(e){toast(e.message);$('#cu').disabled=false}}}
-/* ---------- PROFILE ---------- */
-async function userPage(m,id){
- const u=await getU(id),own=id===me.uid;
- const cnt=async q=>(await getCountFromServer(q)).data().count;
- const[fo,fg]=await Promise.all([cnt(query(collection(db,'follows'),where('to','==',id),where('status','==','accepted'))).catch(()=>0),cnt(query(collection(db,'follows'),where('from','==',id),where('status','==','accepted'))).catch(()=>0)]);
- let canSee=own||!u.isPrivate;
- if(!canSee){const s=await getDoc(doc(db,'follows',me.uid+'_'+id));canSee=s.exists()&&s.data().status==='accepted'}
- let blocked=false;if(!own)blocked=(await getDoc(doc(db,'users',me.uid,'blocks',id))).exists();
- m.innerHTML=`<div style="height:120px;background:${u.coverURL?`url(${esc(u.coverURL)}) center/cover`:'linear-gradient(90deg,var(--ac),var(--ac2))'}"></div>
- <div class="pad"><div class="row" style="margin-top:-46px"><img class="av l" style="border:3px solid var(--bg)" src="${esc(u.photoURL||DEF)}"><div style="flex:1"></div>${own?'':'<button class="btn s" id="fb"></button><button class="btn s g" id="mg">💬</button>'}</div>
- <h3>${esc(u.displayName)} ${u.pro?'<span class="pro">PRO</span>':''} ${u.isPrivate?'🔒':''}</h3><div class="mut">@${esc(u.username)}</div><p style="margin:8px 0">${esc(u.bio)}</p>
- <div class="row" style="gap:24px"><span><b id="np">–</b> Posts</span><b style="cursor:pointer" id="l1">${fo} Followers</b><b style="cursor:pointer" id="l2">${fg} Following</b></div>
- <div class="row" style="margin-top:12px;flex-wrap:wrap">${own?`<button class="btn s g" id="ed">✏️ Edit</button><button class="btn s g" id="pv">${u.isPrivate?'🔓 Public करें':'🔒 Private करें'}</button><button class="btn s g" id="rq">Requests</button><button class="btn s g" id="sa">Saved</button><button class="btn s g" id="lo">Logout</button>`:`<button class="btn s g" id="bl">${blocked?'Unblock':'Block'}</button><button class="btn s g" id="rp">Report</button>`}</div></div><div id="pg"></div>`;
- if(!own){followBtn($('#fb'),id,u);$('#mg').onclick=()=>go('chat',id);
-  $('#bl').onclick=async()=>{const r=doc(db,'users',me.uid,'blocks',id);blocked?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});toast(blocked?'Unblock हुआ':'Block हुआ');go('user',id)};
-  $('#rp').onclick=async()=>{const r=prompt('Report का कारण?');if(r)await addDoc(collection(db,'reports'),{by:me.uid,target:id,reason:r.slice(0,300),createdAt:serverTimestamp()});r&&toast('Report भेजी गई')}}
- else{$('#lo').onclick=()=>signOut(auth);
-  $('#pv').onclick=async()=>{await updateDoc(uref(id),{isPrivate:!u.isPrivate});go('profile')};
-  $('#ed').onclick=()=>edit(u);$('#rq').onclick=()=>requests(m);$('#sa').onclick=()=>saved();}
- $('#l1').onclick=()=>list(id,'to');$('#l2').onclick=()=>list(id,'from');
- const pg=$('#pg');
- if(!canSee||blocked){$('#np').textContent='🔒';pg.innerHTML='<div class="empty">🔒<br>यह Account Private है।<br>Posts देखने के लिए Follow करें।</div>';return}
- const s=await getDocs(own?query(collection(db,'posts'),where('uid','==',id)):query(collection(db,'posts'),where('uid','==',id),where('status','==','approved')));
- const ps=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
- $('#np').textContent=ps.length;
- pg.innerHTML=ps.length?`<div class="grid">${ps.map(p=>`<img src="${esc(p.url)}" data-p="${p.id}" style="${p.status!=='approved'?'opacity:.45':''}">`).join('')}</div>`:'<div class="empty">📷<br>अभी कोई Post नहीं</div>';
- pg.querySelectorAll('[data-p]').forEach(i=>i.onclick=async()=>{const p=ps.find(x=>x.id===i.dataset.p),e=await postEl(p,own);pg.innerHTML='';const b=document.createElement('button');b.className='btn g s';b.style.margin='12px';b.textContent='← Grid';b.onclick=()=>go(own?'profile':'user',id);pg.append(b,e)})}
-function edit(u){const m=$('#v');m.innerHTML=`<div class="pad"><h3>Edit Profile</h3><input id="e1" value="${esc(u.displayName)}" maxlength="40"><textarea id="e2" rows="3" maxlength="150">${esc(u.bio)}</textarea>Profile फोटो<input type="file" id="e3" accept="image/*">Cover फोटो<input type="file" id="e4" accept="image/*"><button class="btn" id="e5" style="width:100%">Save</button></div>`;
- $('#e5').onclick=async()=>{try{const d={displayName:$('#e1').value.trim()||u.displayName,bio:$('#e2').value.trim()};
-  if($('#e3').files[0])d.photoURL=await upload($('#e3').files[0],`avatars/${me.uid}/${Date.now()}`);
-  if($('#e4').files[0])d.coverURL=await upload($('#e4').files[0],`covers/${me.uid}/${Date.now()}`);
-  await updateDoc(uref(me.uid),d);toast('Save हुआ');go('profile')}catch(e){toast(e.message)}}}
-async function list(id,side){const s=await getDocs(query(collection(db,'follows'),where(side,'==',id),where('status','==','accepted')));
- const other=side==='to'?'from':'to';const us=await Promise.all(s.docs.map(d=>getU(d.data()[other])));
- const m=$('#v');m.innerHTML=`<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">${side==='to'?'Followers':'Following'}</h3>${us.map(u=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${u.id}"><img class="av" src="${esc(u.photoURL||DEF)}"><b>@${esc(u.username)}</b></div>`).join('')||'<p class="mut">कोई नहीं</p>'}</div>`;
- $('#bk').onclick=()=>go('user',id);m.querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('user',e.dataset.u))}
-async function requests(m){const s=await getDocs(query(collection(db,'follows'),where('to','==',me.uid),where('status','==','pending')));
- const us=await Promise.all(s.docs.map(async d=>({fid:d.id,...await getU(d.data().from)})));
- m.innerHTML=`<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">Follow Requests</h3>${us.map(u=>`<div class="row sp" style="padding:8px 0"><div class="row"><img class="av" src="${esc(u.photoURL||DEF)}"><b>@${esc(u.username)}</b></div><div><button class="btn s" data-a="${u.fid}" data-u="${u.id}">Accept</button> <button class="btn s g" data-x="${u.fid}">Reject</button></div></div>`).join('')||'<p class="mut">कोई Request नहीं</p>'}</div>`;
- $('#bk').onclick=()=>go('profile');
- m.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,'follows',b.dataset.a),{status:'accepted'});notify(b.dataset.u,'accepted','@'+prof.username+' ने आपकी Request Accept की');requests(m)});
- m.querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{await deleteDoc(doc(db,'follows',b.dataset.x));requests(m)})}
-async function saved(){const s=await getDocs(collection(db,'users',me.uid,'saves'));const m=$('#v');m.innerHTML='<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">Saved Posts</h3></div>';$('#bk').onclick=()=>go('profile');
- for(const d of s.docs){const p=await getDoc(doc(db,'posts',d.id));if(p.exists()&&p.data().status==='approved')m.append(await postEl({id:p.id,...p.data()}))}
- if(!s.size)m.insertAdjacentHTML('beforeend','<div class="empty">कोई Saved Post नहीं</div>')}
-/* ---------- NOTIFICATIONS ---------- */
-async function notifs(m){
- const s=await getDocs(query(collection(db,'users',me.uid,'notifications'),orderBy('createdAt','desc'),limit(50)));
- m.innerHTML=`<div class="pad"><h3 style="margin-bottom:8px">🔔 Notifications</h3>${s.docs.map(d=>`<div class="card pad" style="margin:8px 0;${d.data().read?'opacity:.6':''}">${esc(d.data().text)}<div class="mut">${ts(d.data().createdAt)}</div></div>`).join('')||'<div class="empty">कोई Notification नहीं</div>'}</div>`;
- s.docs.filter(d=>!d.data().read).forEach(d=>updateDoc(d.ref,{read:true}).catch(()=>{}))}
-/* ---------- MESSAGES ---------- */
-const cid=(a,b)=>[a,b].sort().join('_');
-function chats(m){
- m.innerHTML=`<div class="pad"><input id="cs" placeholder="🔍 नया Chat: username खोजें"><div id="cr"></div><h3 style="margin:10px 0">Messages</h3><div id="cl"></div></div>`;
- $('#cs').oninput=async e=>{const q=e.target.value.trim().toLowerCase();if(q.length<2)return $('#cr').innerHTML='';
-  const s=await getDocs(query(collection(db,'users'),where('username','>=',q),where('username','<=',q+'\uf8ff'),limit(6)));
-  $('#cr').innerHTML=s.docs.filter(d=>d.id!==me.uid).map(d=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${d.id}"><img class="av" src="${esc(d.data().photoURL||DEF)}"><b>@${esc(d.data().username)}</b></div>`).join('');
-  $('#cr').querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('chat',e.dataset.u))};
- unsubs.push(onSnapshot(query(collection(db,'chats'),where('members','array-contains',me.uid)),async s=>{
-  const rows=await Promise.all(s.docs.map(async d=>{const c=d.data(),o=c.members.find(x=>x!==me.uid);return{o,c,u:await getU(o)}}));
-  rows.sort((a,b)=>(b.c.lastAt?.seconds||0)-(a.c.lastAt?.seconds||0));
-  const l=$('#cl');if(!l)return;
-  l.innerHTML=rows.map(r=>{const un=r.c['unread_'+me.uid]||0,req=r.c.requestTo===me.uid&&!r.c.accepted;return`<div class="row sp" style="padding:10px 0;cursor:pointer" data-o="${r.o}"><div class="row"><div style="position:relative"><img class="av" src="${esc(r.u.photoURL||DEF)}">${r.u.online?'<span style="position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)"></span>':''}</div><div><b>@${esc(r.u.username)}</b> ${req?'<span class="pro">REQUEST</span>':''}<div class="mut">${esc((r.c.last||'').slice(0,40))}</div></div></div>${un?`<span class="badge" style="position:static">${un}</span>`:''}</div>`}).join('')||'<div class="empty">कोई Chat नहीं। ऊपर Search करें।</div>';
-  l.querySelectorAll('[data-o]').forEach(e=>e.onclick=()=>go('chat',e.dataset.o))}))}
-async function chat(m,oid){
- const o=await getU(oid),id=cid(me.uid,oid),cr=doc(db,'chats',id);let replyTo=null;
- const blockedByMe=(await getDoc(doc(db,'users',me.uid,'blocks',oid))).exists();
- m.innerHTML=`<div class="pad row sp" style="border-bottom:1px solid var(--bd)"><div class="row"><button id="bk">←</button><img class="av" src="${esc(o.photoURL||DEF)}"><div><b>@${esc(o.username)}</b><div class="mut">${o.online?'🟢 Online':'Last seen '+ts(o.lastSeen)}</div></div></div><button class="btn s g" id="bl">${blockedByMe?'Unblock':'Block'}</button></div>
- <div class="msgs" id="ml"></div><div style="height:110px"></div>
- <div class="chatbar"><div class="mut" id="rpl" hidden></div><div class="mut" id="wl"></div><div class="row"><label style="font-size:22px;cursor:pointer">📎<input type="file" id="af" accept="image/*" hidden></label><input id="mi" placeholder="Message..." maxlength="1000"><button class="btn s" id="ms">भेजें</button></div></div>`;
- $('#bk').onclick=()=>go('msgs');
- $('#bl').onclick=async()=>{const r=doc(db,'users',me.uid,'blocks',oid);blockedByMe?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});toast('Updated');go('chat',oid)};
- const usage=async()=>{const s=await getDoc(doc(db,'usage',me.uid+'_'+today()));const w=s.exists()?s.data().words:0;const max=prof.pro?(prof.wordLimit||600):LIMIT;$('#wl').textContent=`आज का उपयोग: ${w}/${max} words`;return{w,max}};usage();
- unsubs.push(onSnapshot(query(collection(db,'chats',id,'messages'),orderBy('createdAt','asc'),limit(200)),s=>{
-  const l=$('#ml');if(!l)return;const by={};s.docs.forEach(d=>by[d.id]=d.data());
-  l.innerHTML=s.docs.map(d=>{const c=d.data(),mine=c.from===me.uid,r=c.replyTo&&by[c.replyTo];
-   return`<div class="m ${mine?'me':''}" data-i="${d.id}">${r?`<div class="rp">${esc((r.text||'📷').slice(0,50))}</div>`:''}${c.img?`<img src="${esc(c.img)}">`:''}${esc(c.text)}<div style="font-size:10px;opacity:.6">${ts(c.createdAt)}</div></div>`}).join('')||'<div class="empty">Chat शुरू करें 👋</div>';
-  l.querySelectorAll('.m').forEach(e=>e.ondblclick=()=>{replyTo=e.dataset.i;$('#rpl').hidden=false;$('#rpl').textContent='↩ Reply: '+(by[replyTo].text||'📷').slice(0,40)+' (रद्द: टैप करें)';$('#rpl').onclick=()=>{replyTo=null;$('#rpl').hidden=true}});
-  scrollTo(0,document.body.scrollHeight);
-  updateDoc(cr,{['unread_'+me.uid]:0}).catch(()=>{})}));
- const send=async()=>{
-  const t=$('#mi').value.trim(),f=$('#af').files[0];if(!t&&!f)return;
-  const n=words(t),{w,max}=await usage();
-  if(w+n>max)return toast(`⚠️ आज की ${max} words की सीमा पूरी (${w} उपयोग)। PRO लें या कल आएँ।`);
-  $('#ms').disabled=true;
-  try{let img='';if(f)img=await upload(f,`chat/${id}/${Date.now()}`);
-   const snap=await getDoc(cr);const first=!snap.exists();
-   const b=writeBatch(db),mr=doc(collection(db,'chats',id,'messages'));
-   b.set(mr,{from:me.uid,text:t,img,replyTo,words:n,createdAt:serverTimestamp()});
-   const meta={members:[me.uid,oid],last:t||'📷 Photo',lastAt:serverTimestamp(),['unread_'+oid]:increment(1)};
-   if(first){meta.requestTo=oid;meta.accepted=false;meta['unread_'+me.uid]=0}
-   else if(snap.data().requestTo===me.uid&&!snap.data().accepted)meta.accepted=true;
-   b.set(cr,meta,{merge:true});
-   b.set(doc(db,'usage',me.uid+'_'+today()),{uid:me.uid,day:today(),words:increment(n)},{merge:true});
-   await b.commit();notify(oid,'msg','@'+prof.username+' का नया Message');
-   $('#mi').value='';$('#af').value='';replyTo=null;$('#rpl').hidden=true;usage();
-  }catch(e){toast(e.code==='permission-denied'?'Server ने रोका: Word सीमा या Block':'Error: '+e.message)}
-  $('#ms').disabled=false};
- $('#ms').onclick=send;$('#mi').onkeydown=e=>e.key==='Enter'&&send()}
-function explore2(){}
-</script></body></html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <title>CREATOR CONNECT — Social & Creator Service Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #111116;
+      --card: #16161e;
+      --card-hover: #1d1d27;
+      --input-bg: #1e1e28;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-soft: #71717a;
+      --primary: #8b5cf6;
+      --primary-2: #ec4899;
+      --gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      --gradient-gold: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f97316 100%);
+      --cyan: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --glass: rgba(17, 17, 22, 0.84);
+      --shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+      --radius: 18px;
+      --nav-height: 64px;
+      --header-height: 62px;
+      --sidebar-width: 248px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f6fb;
+      --bg-elevated: #ffffff;
+      --card: #ffffff;
+      --card-hover: #f8fafc;
+      --input-bg: #f1f5f9;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.16);
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-soft: #64748b;
+      --glass: rgba(255, 255, 255, 0.88);
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea, select { font-family: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    img, video { display: block; max-width: 100%; }
+
+    .hidden { display: none !important; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 18px; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+      transition: transform 0.16s ease, opacity 0.16s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 6px 20px rgba(139, 92, 246, 0.32); }
+    .btn-primary:hover:not(:disabled) { opacity: 0.94; }
+    .btn-secondary { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); }
+    .btn-secondary:hover:not(:disabled) { background: var(--card-hover); }
+    .btn-danger { background: rgba(239, 68, 68, 0.14); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.28); }
+    .btn-gold { background: var(--gradient-gold); color: #111; font-weight: 700; }
+    .btn-sm { padding: 7px 13px; font-size: 0.8rem; border-radius: 10px; }
+    .btn-icon {
+      width: 40px; height: 40px; padding: 0; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--input-bg); border: 1px solid var(--border); position: relative;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700;
+    }
+    .badge-pro { background: var(--gradient-gold); color: #18181b; }
+    .badge-pending { background: rgba(245, 158, 11, 0.16); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-approved { background: rgba(16, 185, 129, 0.16); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-rejected { background: rgba(239, 68, 68, 0.16); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-primary { background: rgba(139, 92, 246, 0.16); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+      background: var(--input-bg); border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .avatar-ring { padding: 2px; background: var(--gradient); border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .avatar-ring img { border: 2px solid var(--bg); }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+    .form-label { font-size: 0.84rem; font-weight: 600; color: var(--text-muted); }
+    .form-control {
+      width: 100%; padding: 12px 14px; border-radius: 12px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      font-size: 0.93rem; outline: none; transition: border-color 0.2s ease;
+    }
+    .form-control:focus { border-color: var(--primary); }
+    textarea.form-control { resize: vertical; min-height: 92px; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--input-bg) 25%, var(--card-hover) 50%, var(--input-bg) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Auth Welcome View */
+    #auth-view {
+      min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.22), transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(236, 72, 153, 0.18), transparent 42%),
+        var(--bg);
+    }
+    .welcome-card { width: 100%; max-width: 480px; padding: 36px 28px; text-align: center; position: relative; }
+    .brand-logo-lg {
+      width: 68px; height: 68px; border-radius: 20px; margin: 0 auto 18px;
+      background: var(--gradient); display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 32px rgba(139, 92, 246, 0.42);
+    }
+    .welcome-title { font-size: 1.85rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .welcome-sub { color: var(--text-muted); font-size: 0.95rem; line-height: 1.55; margin-bottom: 24px; }
+    .feature-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; text-align: left; }
+    .feature-pill {
+      padding: 12px; border-radius: 14px; background: var(--input-bg); border: 1px solid var(--border);
+      font-size: 0.8rem; display: flex; align-items: center; gap: 8px; font-weight: 600;
+    }
+    .google-btn {
+      width: 100%; padding: 14px 20px; border-radius: 14px;
+      background: #ffffff; color: #111827; font-weight: 700; font-size: 0.96rem;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22); transition: transform 0.16s ease;
+    }
+    .google-btn:hover { transform: translateY(-1px); }
+
+    #setup-view { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .setup-card { width: 100%; max-width: 500px; padding: 28px; }
+
+    /* App Shell */
+    #app-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+
+    .app-header {
+      position: sticky; top: 0; z-index: 40; height: var(--header-height);
+      background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border); padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.02rem; letter-spacing: -0.02em; }
+    .header-brand-icon {
+      width: 34px; height: 34px; border-radius: 10px; background: var(--gradient);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .word-pill {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 99px;
+      background: var(--input-bg); border: 1px solid var(--border); font-size: 0.76rem; font-weight: 700; cursor: pointer;
+    }
+    .notif-dot {
+      position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+      padding: 0 5px; border-radius: 99px; background: var(--primary-2); color: #fff;
+      font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--bg);
+    }
+
+    .app-body { display: flex; flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; }
+
+    .desktop-sidebar {
+      display: none; width: var(--sidebar-width); padding: 20px 14px;
+      border-right: 1px solid var(--border); position: sticky; top: var(--header-height);
+      height: calc(100dvh - var(--header-height)); flex-direction: column; justify-content: space-between;
+    }
+    .side-nav-list { display: flex; flex-direction: column; gap: 6px; }
+    .side-nav-btn {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-radius: 14px; font-weight: 600; font-size: 0.94rem; color: var(--text-muted);
+      transition: all 0.18s ease; text-align: left; width: 100%;
+    }
+    .side-nav-btn:hover { background: var(--input-bg); color: var(--text); }
+    .side-nav-btn.active {
+      background: rgba(139, 92, 246, 0.15); color: var(--text);
+      border: 1px solid rgba(139, 92, 246, 0.28);
+    }
+
+    .main-content { flex: 1; min-width: 0; padding: 16px 14px calc(var(--nav-height) + 24px); }
+
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 45;
+      height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr);
+    }
+    .bottom-nav-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; color: var(--text-soft); font-size: 0.7rem; font-weight: 600; position: relative;
+    }
+    .bottom-nav-btn.active { color: var(--primary); }
+    .create-fab {
+      width: 40px; height: 40px; border-radius: 14px; background: var(--gradient);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+    }
+
+    @media (min-width: 900px) {
+      .desktop-sidebar { display: flex; }
+      .bottom-nav { display: none; }
+      .main-content { padding: 24px 28px 40px; }
+    }
+
+    .pill-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: none; }
+    .pill-tabs::-webkit-scrollbar { display: none; }
+    .pill-tab {
+      padding: 8px 16px; border-radius: 99px; font-size: 0.84rem; font-weight: 600;
+      background: var(--input-bg); border: 1px solid var(--border); color: var(--text-muted);
+      white-space: nowrap; transition: all 0.18s ease;
+    }
+    .pill-tab.active { background: var(--gradient); color: #fff; border-color: transparent; }
+
+    /* Feed & Post Card */
+    .feed-container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+    .post-card { overflow: hidden; }
+    .post-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; gap: 10px; }
+    .post-author { display: flex; align-items: center; gap: 10px; min-width: 0; cursor: pointer; }
+    .post-author-meta { min-width: 0; }
+    .post-author-name { font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 6px; }
+    .post-author-sub { font-size: 0.77rem; color: var(--text-soft); }
+    .post-media { position: relative; background: #000; width: 100%; overflow: hidden; }
+    .post-media img { width: 100%; max-height: 560px; object-fit: cover; }
+
+    /* Before / After Slider */
+    .ba-wrapper {
+      position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 520px;
+      overflow: hidden; user-select: none; touch-action: pan-y; background: #0b0b0e;
+    }
+    .ba-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .ba-before-layer { position: absolute; inset: 0; overflow: hidden; width: 50%; border-right: 2px solid #ffffff; }
+    .ba-before-layer img { width: 100%; height: 100%; object-fit: cover; max-width: none; }
+    .ba-handle {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #111;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.45); pointer-events: none; z-index: 4; font-weight: 800; font-size: 0.85rem;
+    }
+    .ba-label {
+      position: absolute; top: 12px; z-index: 3; padding: 4px 10px; border-radius: 99px;
+      background: rgba(0,0,0,0.65); color: #fff; font-size: 0.7rem; font-weight: 700; pointer-events: none;
+    }
+    .ba-label-before { left: 12px; }
+    .ba-label-after { right: 12px; }
+    .ba-range { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; z-index: 5; }
+    .ba-meta-box {
+      padding: 12px 16px; background: rgba(139, 92, 246, 0.08);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 0.82rem;
+    }
+
+    .post-actions { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 6px; }
+    .post-actions-left { display: flex; align-items: center; gap: 14px; }
+    .action-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--text-muted); padding: 4px; }
+    .action-btn.liked { color: var(--primary-2); }
+    .action-btn.saved { color: var(--warning); }
+    .post-body { padding: 6px 16px 16px; font-size: 0.9rem; line-height: 1.5; }
+    .hashtag { color: var(--cyan); font-weight: 600; cursor: pointer; margin-right: 6px; }
+    .hashtag:hover { text-decoration: underline; }
+
+    /* Explore Grid */
+    .explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    @media (min-width: 768px) { .explore-grid { gap: 10px; } }
+    .explore-tile { position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: var(--input-bg); cursor: pointer; }
+    .explore-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.28s ease; }
+    .explore-tile:hover img { transform: scale(1.04); }
+    .explore-tile-badge {
+      position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.68);
+      color: #fff; padding: 3px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 700;
+    }
+    .explore-tile-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.42); color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      opacity: 0; transition: opacity 0.2s ease; font-weight: 700; font-size: 0.85rem;
+    }
+    .explore-tile:hover .explore-tile-overlay { opacity: 1; }
+
+    /* Profile View */
+    .profile-cover { height: 165px; border-radius: var(--radius) var(--radius) 0 0; background: var(--gradient); position: relative; overflow: hidden; }
+    .profile-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-top { padding: 0 20px 20px; position: relative; }
+    .profile-avatar-wrap { margin-top: -46px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .profile-avatar-lg { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card); background: var(--input-bg); }
+    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 14px; background: var(--input-bg); border-radius: 14px; margin: 16px 0; text-align: center; }
+    .stat-num { font-size: 1.15rem; font-weight: 800; }
+    .stat-label { font-size: 0.76rem; color: var(--text-soft); font-weight: 600; }
+
+    /* Messages */
+    .chat-layout { display: grid; grid-template-columns: 1fr; gap: 14px; height: calc(100dvh - var(--header-height) - var(--nav-height) - 34px); min-height: 520px; }
+    @media (min-width: 900px) { .chat-layout { grid-template-columns: 330px 1fr; height: calc(100dvh - var(--header-height) - 48px); } }
+    .conv-panel, .chat-panel { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+    .chat-mobile-hidden { display: none !important; }
+    @media (min-width: 900px) { .chat-mobile-hidden { display: flex !important; } }
+
+    .conv-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .conv-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 14px; cursor: pointer; transition: background 0.16s ease; }
+    .conv-item:hover, .conv-item.active { background: var(--input-bg); }
+    .online-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); border: 2px solid var(--card); position: absolute; bottom: 0; right: 0; }
+
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .msg-row { display: flex; flex-direction: column; max-width: 82%; }
+    .msg-row.me { align-self: flex-end; align-items: flex-end; }
+    .msg-row.them { align-self: flex-start; align-items: flex-start; }
+    .msg-row.system { align-self: center; max-width: 92%; align-items: center; }
+
+    .msg-bubble { padding: 10px 14px; border-radius: 16px; font-size: 0.9rem; line-height: 1.45; position: relative; word-break: break-word; }
+    .msg-row.me .msg-bubble { background: var(--gradient); color: #fff; border-bottom-right-radius: 4px; }
+    .msg-row.them .msg-bubble { background: var(--input-bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg-system-pill {
+      padding: 7px 14px; border-radius: 99px; font-size: 0.78rem; font-weight: 700;
+      background: rgba(16, 185, 129, 0.14); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;
+    }
+    .msg-reply-quote { font-size: 0.76rem; padding: 6px 10px; border-radius: 10px; margin-bottom: 6px; background: rgba(0,0,0,0.22); border-left: 3px solid var(--cyan); }
+    .msg-meta { font-size: 0.7rem; color: var(--text-soft); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+
+    .offer-card {
+      width: 300px; max-width: 100%; border-radius: 18px; overflow: hidden;
+      background: linear-gradient(160deg, rgba(139,92,246,0.18), rgba(236,72,153,0.12));
+      border: 1px solid rgba(139, 92, 246, 0.42); padding: 16px; box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+    }
+    .offer-price { font-size: 1.45rem; font-weight: 800; color: #fff; margin: 6px 0; }
+    [data-theme="light"] .offer-price { color: #0f172a; }
+
+    .word-limit-bar { padding: 8px 14px; background: var(--input-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.78rem; }
+    .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; max-width: 160px; }
+    .progress-fill { height: 100%; background: var(--gradient); transition: width 0.25s ease; }
+
+    .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .plan-card { padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+    .plan-card.featured { border-color: rgba(245, 158, 11, 0.55); box-shadow: 0 12px 32px rgba(245, 158, 11, 0.14); }
+
+    .timeline { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .timeline-step { display: flex; align-items: center; gap: 10px; font-size: 0.84rem; color: var(--text-soft); }
+    .timeline-step.done { color: var(--success); font-weight: 700; }
+    .timeline-step.current { color: var(--primary); font-weight: 700; }
+    .timeline-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; flex-shrink: 0; }
+    .timeline-step.done .timeline-dot { background: var(--success); }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0.68); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-box { width: 100%; max-width: 520px; max-height: 88dvh; display: flex; flex-direction: column; overflow: hidden; animation: popIn 0.18s ease; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+
+    .drawer-backdrop { position: fixed; inset: 0; z-index: 75; background: rgba(0,0,0,0.55); display: flex; justify-content: flex-end; }
+    .drawer-panel { width: 100%; max-width: 400px; height: 100%; background: var(--bg-elevated); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+
+    #toast-container {
+      position: fixed; top: 76px; right: 16px; z-index: 120;
+      display: flex; flex-direction: column; gap: 10px; max-width: 340px; width: calc(100% - 32px); pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto; padding: 12px 16px; border-radius: 14px;
+      background: var(--card); border: 1px solid var(--border-strong); box-shadow: var(--shadow);
+      font-size: 0.86rem; font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--primary); }
+
+    .empty-state { text-align: center; padding: 44px 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- WELCOME & GOOGLE LOGIN -->
+  <section id="auth-view" class="hidden">
+    <div class="card welcome-card">
+      <button id="welcome-theme-btn" class="btn-icon" style="position:absolute; top:16px; right:16px;" title="Switch Theme">🌓</button>
+      <div class="brand-logo-lg">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <h1 class="welcome-title">CREATOR CONNECT</h1>
+      <p class="welcome-sub">Showcase Before/After edits, connect with creators in real-time, and book premium video editing services seamlessly.</p>
+
+      <div class="feature-pills">
+        <div class="feature-pill"><span>✨</span><span>Before/After Showcase</span></div>
+        <div class="feature-pill"><span>💬</span><span>Real-time Creator Chat</span></div>
+        <div class="feature-pill"><span>🎬</span><span>Video Editing Orders</span></div>
+        <div class="feature-pill"><span>👑</span><span>PRO Membership</span></div>
+      </div>
+
+      <div id="file-protocol-warn" class="hidden" style="margin-bottom:14px; padding:10px; border-radius:12px; background:rgba(245,158,11,0.14); color:var(--warning); font-size:0.8rem;">
+        Google Sign-In requires <b>http://localhost</b> or <b>https://</b> (Firebase Hosting / Live Server), not <code>file://</code>.
+      </div>
+
+      <button id="google-login-btn" class="google-btn">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- FIRST-TIME PROFILE SETUP -->
+  <section id="setup-view" class="hidden">
+    <div class="card setup-card">
+      <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">Complete Your Creator Profile</h2>
+      <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:20px;">Choose a unique username and customize your public identity.</p>
+      <form id="profile-setup-form">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px;">
+          <img id="setup-avatar-preview" src="" alt="Avatar" class="avatar" style="width:72px; height:72px;" />
+          <div>
+            <label class="btn btn-secondary btn-sm" for="setup-avatar-input">Upload Photo</label>
+            <input type="file" id="setup-avatar-input" accept="image/png,image/jpeg,image/webp" class="hidden" />
+            <p style="font-size:0.75rem; color:var(--text-soft); margin-top:6px;">JPG, PNG, WEBP up to 10MB</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Name *</label>
+          <input type="text" id="setup-display-name" class="form-control" required maxlength="40" placeholder="e.g. Aarav Studio" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unique Username *</label>
+          <input type="text" id="setup-username" class="form-control" required minlength="3" maxlength="20" placeholder="e.g. aarav_edits" />
+          <small id="setup-username-status" style="font-size:0.76rem; color:var(--text-soft);">Letters, numbers, _ and . only (3-20 chars)</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea id="setup-bio" class="form-control" maxlength="220" placeholder="Video editor, colorist & digital creator..."></textarea>
+        </div>
+        <button type="submit" id="setup-submit-btn" class="btn btn-primary" style="width:100%;">Save & Enter CREATOR CONNECT</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- MAIN APPLICATION SHELL -->
+  <div id="app-shell" class="hidden">
+    <header class="app-header">
+      <div class="header-brand" style="cursor:pointer;" data-nav="home">
+        <div class="header-brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <span>CREATOR CONNECT</span>
+      </div>
+
+      <div class="header-actions">
+        <div id="header-word-pill" class="word-pill" title="Daily Messaging Word Allowance" data-nav="plans">
+          <span>💬</span>
+          <span id="header-word-text">0/150</span>
+        </div>
+        <button class="btn-icon" title="Video Orders" data-nav="orders">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 16 12 10 15 10 9"/></svg>
+        </button>
+        <button class="btn-icon" id="theme-toggle-btn" title="Toggle Dark/Light Theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="btn-icon" id="notif-open-btn" title="Notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-badge" class="notif-dot hidden">0</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="desktop-sidebar">
+        <div class="side-nav-list">
+          <button class="side-nav-btn active" data-nav="home">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home Feed</span>
+          </button>
+          <button class="side-nav-btn" data-nav="explore">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Explore</span>
+          </button>
+          <button class="side-nav-btn" data-nav="create">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <span>Create Post</span>
+          </button>
+          <button class="side-nav-btn" data-nav="messages">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Messages</span>
+            <span id="side-msg-badge" class="badge badge-primary hidden" style="margin-left:auto;">0</span>
+          </button>
+          <button class="side-nav-btn" data-nav="orders">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10 9 16 12 10 15 10 9"/></svg>
+            <span>Video Orders</span>
+          </button>
+          <button class="side-nav-btn" data-nav="plans">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span>PRO & Plans</span>
+          </button>
+          <button class="side-nav-btn" data-nav="profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>My Profile</span>
+          </button>
+        </div>
+
+        <button class="btn btn-secondary" id="sidebar-logout-btn" style="width:100%;">Logout</button>
+      </aside>
+
+      <main class="main-content">
+        <!-- HOME -->
+        <section id="view-home">
+          <div class="feed-container">
+            <div class="pill-tabs" id="feed-filter-tabs">
+              <button class="pill-tab active" data-feed-filter="all">All Approved</button>
+              <button class="pill-tab" data-feed-filter="following">Following</button>
+              <button class="pill-tab" data-feed-filter="trending">🔥 Trending</button>
+              <button class="pill-tab" data-feed-filter="before_after">✨ Before / After</button>
+            </div>
+            <div id="feed-list" style="display:flex; flex-direction:column; gap:18px;"></div>
+            <div style="text-align:center; padding:8px 0;">
+              <button id="feed-load-more-btn" class="btn btn-secondary hidden">Load More Posts</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- EXPLORE -->
+        <section id="view-explore" class="hidden">
+          <div style="max-width:860px; margin:0 auto;">
+            <div style="display:flex; gap:10px; margin-bottom:14px;">
+              <input type="search" id="explore-search-input" class="form-control" placeholder="Search @username, creators, or #hashtags..." />
+            </div>
+            <div id="explore-user-results" class="hidden" style="margin-bottom:18px;"></div>
+            <div class="pill-tabs" id="explore-tag-chips">
+              <button class="pill-tab active" data-tag="">All Showcase</button>
+              <button class="pill-tab" data-tag="colorgrading">#colorgrading</button>
+              <button class="pill-tab" data-tag="retouching">#retouching</button>
+              <button class="pill-tab" data-tag="videoedit">#videoedit</button>
+              <button class="pill-tab" data-tag="reels">#reels</button>
+              <button class="pill-tab" data-tag="photography">#photography</button>
+            </div>
+            <div id="explore-grid" class="explore-grid"></div>
+          </div>
+        </section>
+
+        <!-- CREATE -->
+        <section id="view-create" class="hidden">
+          <div class="card" style="max-width:620px; margin:0 auto; padding:24px;">
+            <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">Create New Upload</h2>
+            <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:18px;">
+              Uploads start in <b>Pending Approval</b> status and appear in the public feed once approved by Admin.
+            </p>
+
+            <div class="pill-tabs" id="create-mode-tabs">
+              <button type="button" class="pill-tab active" data-create-mode="photo">📸 Photo Post</button>
+              <button type="button" class="pill-tab" data-create-mode="before_after">✨ Before / After Showcase</button>
+            </div>
+
+            <form id="create-post-form">
+              <div id="create-single-wrap" class="form-group">
+                <label class="form-label">Select Photo * (JPG, PNG, WEBP — Max 10MB)</label>
+                <input type="file" id="create-single-file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                <img id="create-single-preview" class="hidden" style="margin-top:10px; border-radius:14px; max-height:320px; object-fit:cover; width:100%;" />
+              </div>
+
+              <div id="create-ba-wrap" class="hidden">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="form-group">
+                    <label class="form-label">Original (Before) *</label>
+                    <input type="file" id="create-before-file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Edited (After) *</label>
+                    <input type="file" id="create-after-file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                  </div>
+                </div>
+                <div id="create-ba-preview-box" class="hidden" style="margin-bottom:16px;"></div>
+                <div class="form-group">
+                  <label class="form-label">Editing Description *</label>
+                  <textarea id="create-editing-desc" class="form-control" maxlength="400" placeholder="Color grading, skin retouching, LUTs, lighting adjustments..."></textarea>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="form-group">
+                    <label class="form-label">Editing Date *</label>
+                    <input type="date" id="create-editing-date" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Result Rating (1-5)</label>
+                    <select id="create-rating" class="form-control">
+                      <option value="5">★★★★★ (5/5)</option>
+                      <option value="4">★★★★☆ (4/5)</option>
+                      <option value="3">★★★☆☆ (3/5)</option>
+                      <option value="2">★★☆☆☆ (2/5)</option>
+                      <option value="1">★☆☆☆☆ (1/5)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Caption *</label>
+                <textarea id="create-caption" class="form-control" required maxlength="600" placeholder="Write something inspiring about your creation..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hashtags (space or comma separated)</label>
+                <input type="text" id="create-hashtags" class="form-control" placeholder="#colorgrading #reels #creator" />
+              </div>
+
+              <div id="upload-progress-wrap" class="hidden" style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+                  <span>Uploading to Firebase Storage...</span>
+                  <span id="upload-progress-pct">0%</span>
+                </div>
+                <div class="progress-track" style="max-width:100%; height:8px;"><div id="upload-progress-fill" class="progress-fill" style="width:0%"></div></div>
+              </div>
+
+              <button type="submit" id="create-submit-btn" class="btn btn-primary" style="width:100%;">Submit for Admin Approval</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- MESSAGES -->
+        <section id="view-messages" class="hidden">
+          <div class="chat-layout">
+            <div class="card conv-panel" id="conv-list-panel">
+              <div style="padding:14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <h3 style="font-size:1rem; font-weight:800;">Messages</h3>
+                <button id="chat-admin-btn" class="btn btn-primary btn-sm">⚡ Admin Support</button>
+              </div>
+              <div style="padding:10px 12px 4px; display:flex; gap:6px;">
+                <button class="pill-tab active" data-conv-tab="active" style="flex:1; padding:6px;">Chats</button>
+                <button class="pill-tab" data-conv-tab="requests" style="flex:1; padding:6px;">Requests <span id="req-count-pill"></span></button>
+              </div>
+              <div id="conv-list" class="conv-list"></div>
+            </div>
+
+            <div class="card chat-panel chat-mobile-hidden" id="chat-window-panel">
+              <div id="chat-empty-state" class="empty-state" style="margin:auto;">
+                <span style="font-size:2rem;">💬</span>
+                <strong>Select a conversation</strong>
+                <p style="font-size:0.84rem;">Chat with creators or message Admin Support for custom video service offers.</p>
+              </div>
+
+              <div id="chat-active-container" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                <div style="padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                  <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                    <button id="chat-back-btn" class="btn-icon" style="width:34px; height:34px;" title="Back">←</button>
+                    <div style="position:relative;">
+                      <img id="chat-peer-avatar" src="" class="avatar" style="width:38px; height:38px;" />
+                      <span id="chat-peer-online" class="online-dot hidden"></span>
+                    </div>
+                    <div style="min-width:0;">
+                      <div id="chat-peer-name" style="font-weight:700; font-size:0.93rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                      <div id="chat-peer-status" style="font-size:0.74rem; color:var(--text-soft);"></div>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:6px;">
+                    <button id="chat-view-profile-btn" class="btn btn-secondary btn-sm">Profile</button>
+                    <button id="chat-block-btn" class="btn btn-danger btn-sm">Block/Report</button>
+                  </div>
+                </div>
+
+                <div class="word-limit-bar">
+                  <div>
+                    <span id="word-limit-label" style="font-weight:700;">Daily Words: 0 / 150</span>
+                    <span style="color:var(--text-soft); margin-left:6px;">(All chats combined • Daily reset)</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="progress-track"><div id="word-limit-fill" class="progress-fill" style="width:0%"></div></div>
+                    <button class="badge badge-pro" data-nav="plans" style="cursor:pointer;">Upgrade</button>
+                  </div>
+                </div>
+
+                <div id="chat-request-banner" class="hidden" style="padding:12px 16px; background:rgba(139,92,246,0.12); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                  <span style="font-size:0.82rem; font-weight:600;">Message Request — Accept to move to your main inbox.</span>
+                  <div style="display:flex; gap:8px;">
+                    <button id="accept-msg-req-btn" class="btn btn-primary btn-sm">Accept</button>
+                    <button id="decline-msg-req-btn" class="btn btn-danger btn-sm">Decline</button>
+                  </div>
+                </div>
+
+                <div id="chat-messages-list" class="chat-messages"></div>
+
+                <div id="chat-reply-bar" class="hidden" style="padding:8px 14px; background:var(--input-bg); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-size:0.8rem; border-left:3px solid var(--primary); padding-left:8px;">
+                    <div id="chat-reply-author" style="font-weight:700;"></div>
+                    <div id="chat-reply-text" style="color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;"></div>
+                  </div>
+                  <button id="chat-reply-cancel" class="btn btn-sm">✕</button>
+                </div>
+
+                <form id="chat-send-form" style="padding:10px 12px; border-top:1px solid var(--border); display:flex; align-items:center; gap:8px;">
+                  <label for="chat-img-input" class="btn-icon" title="Attach Photo" style="cursor:pointer; flex-shrink:0;">📎</label>
+                  <input type="file" id="chat-img-input" accept="image/jpeg,image/png,image/webp" class="hidden" />
+                  <input type="text" id="chat-msg-input" class="form-control" placeholder="Type a message..." autocomplete="off" style="padding:10px 14px;" />
+                  <span id="chat-draft-words" style="font-size:0.72rem; color:var(--text-soft); white-space:nowrap;">0w</span>
+                  <button type="submit" id="chat-send-btn" class="btn btn-primary btn-sm" style="padding:10px 16px;">Send</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="view-profile" class="hidden">
+          <div id="profile-container" style="max-width:780px; margin:0 auto;"></div>
+        </section>
+
+        <!-- VIDEO ORDERS -->
+        <section id="view-orders" class="hidden">
+          <div style="max-width:820px; margin:0 auto;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+              <div>
+                <h2 style="font-size:1.35rem; font-weight:800;">My Video Orders</h2>
+                <p style="font-size:0.84rem; color:var(--text-muted);">Track verified payments, submit video instructions, and monitor delivery progress.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" data-nav="messages">💬 Chat with Admin</button>
+            </div>
+            <div id="orders-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+          </div>
+        </section>
+
+        <!-- PLANS -->
+        <section id="view-plans" class="hidden">
+          <div style="max-width:960px; margin:0 auto;">
+            <div id="my-membership-banner" class="card" style="padding:20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;"></div>
+            <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:6px;">Membership & PRO Plans</h2>
+            <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:18px;">
+              Unlock higher daily messaging word limits, PRO badge, and priority perks. Activated strictly after server-verified Razorpay payment.
+            </p>
+            <div id="plans-grid" class="plans-grid"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav-btn active" data-nav="home">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="bottom-nav-btn" data-nav="explore">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </button>
+      <button class="bottom-nav-btn" data-nav="create">
+        <div class="create-fab">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </button>
+      <button class="bottom-nav-btn" data-nav="messages">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Messages</span>
+        <span id="bot-msg-badge" class="notif-dot hidden" style="top:4px; right:18px;">0</span>
+      </button>
+      <button class="bottom-nav-btn" data-nav="profile">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- NOTIFICATIONS DRAWER -->
+  <div id="notif-drawer" class="drawer-backdrop hidden">
+    <div class="drawer-panel">
+      <div class="modal-header">
+        <h3 style="font-size:1.05rem; font-weight:800;">Notifications</h3>
+        <div style="display:flex; gap:8px;">
+          <button id="mark-all-read-btn" class="btn btn-secondary btn-sm">Mark all read</button>
+          <button id="notif-close-btn" class="btn-icon" style="width:34px; height:34px;">✕</button>
+        </div>
+      </div>
+      <div id="notif-list" style="flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- COMMENTS MODAL -->
+  <div id="comments-modal" class="modal-backdrop hidden">
+    <div class="card modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:1rem; font-weight:800;">Comments & Replies</h3>
+        <button class="btn-icon modal-close" data-close="comments-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div id="comments-list" class="modal-body" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <form id="comment-form" style="padding:12px 16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
+        <div id="comment-reply-indicator" class="hidden" style="font-size:0.78rem; color:var(--cyan); display:flex; justify-content:space-between;">
+          <span id="comment-reply-label"></span>
+          <button type="button" id="comment-reply-cancel" style="color:var(--danger);">Cancel</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="comment-input" class="form-control" required maxlength="350" placeholder="Add a comment..." style="padding:10px 12px;" />
+          <button type="submit" class="btn btn-primary btn-sm">Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT PROFILE MODAL -->
+  <div id="edit-profile-modal" class="modal-backdrop hidden">
+    <div class="card modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:1rem; font-weight:800;">Edit Profile & Privacy</h3>
+        <button class="btn-icon modal-close" data-close="edit-profile-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <form id="edit-profile-form" class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Profile Photo</label>
+          <input type="file" id="edit-avatar-file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cover Photo</label>
+          <input type="file" id="edit-cover-file" class="form-control" accept="image/jpeg,image/png,image/webp" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input type="text" id="edit-display-name" class="form-control" required maxlength="40" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="edit-username" class="form-control" required minlength="3" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea id="edit-bio" class="form-control" maxlength="220"></textarea>
+        </div>
+        <div class="form-group" style="flex-direction:row; align-items:center; justify-content:space-between; background:var(--input-bg); padding:12px 14px; border-radius:12px;">
+          <div>
+            <div style="font-weight:700; font-size:0.9rem;">Private Account</div>
+            <div style="font-size:0.76rem; color:var(--text-soft);">Only approved followers can see your posts & portfolio</div>
+          </div>
+          <input type="checkbox" id="edit-is-private" style="width:20px; height:20px; accent-color:var(--primary);" />
+        </div>
+        <button type="submit" id="edit-profile-save-btn" class="btn btn-primary" style="width:100%;">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOLLOWERS / FOLLOWING MODAL -->
+  <div id="list-modal" class="modal-backdrop hidden">
+    <div class="card modal-box">
+      <div class="modal-header">
+        <h3 id="list-modal-title" style="font-size:1rem; font-weight:800;">List</h3>
+        <button class="btn-icon modal-close" data-close="list-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div id="list-modal-body" class="modal-body" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- BLOCK / REPORT MODAL -->
+  <div id="report-modal" class="modal-backdrop hidden">
+    <div class="card modal-box">
+      <div class="modal-header">
+        <h3 style="font-size:1rem; font-weight:800;">Safety: Block or Report</h3>
+        <button class="btn-icon modal-close" data-close="report-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:14px;">Take action against spam, harassment, or policy violations.</p>
+        <button id="confirm-block-btn" class="btn btn-danger" style="width:100%; margin-bottom:18px;">🚫 Block / Unblock User</button>
+        <form id="report-form">
+          <div class="form-group">
+            <label class="form-label">Report Reason *</label>
+            <select id="report-reason" class="form-control" required>
+              <option value="spam">Spam or Scam</option>
+              <option value="harassment">Harassment or Abuse</option>
+              <option value="inappropriate">Inappropriate Content</option>
+              <option value="copyright">Copyright / Stolen Edit</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Details</label>
+            <textarea id="report-details" class="form-control" maxlength="400" placeholder="Describe the issue..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Submit Report to Admin</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO ORDER REQUEST MODAL -->
+  <div id="order-form-modal" class="modal-backdrop hidden">
+    <div class="card modal-box" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.05rem; font-weight:800;">🎬 Submit Video Order Request</h3>
+        <button class="btn-icon modal-close" data-close="order-form-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <form id="video-order-form" class="modal-body">
+        <input type="hidden" id="order-req-id" />
+        <div class="form-group">
+          <label class="form-label">Video Topic *</label>
+          <input type="text" id="vo-topic" class="form-control" required maxlength="120" placeholder="e.g. Cinematic Tech Product Review" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Video Type *</label>
+            <select id="vo-type" class="form-control" required>
+              <option value="Reels / Shorts">Reels / Shorts (Vertical)</option>
+              <option value="YouTube Long-Form">YouTube Long-Form</option>
+              <option value="Promo / Ad">Promo / Commercial Ad</option>
+              <option value="Documentary">Documentary / Storytelling</option>
+              <option value="Motion Graphics">Motion Graphics / Typography</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Video Duration *</label>
+            <input type="text" id="vo-duration" class="form-control" required placeholder="e.g. 60 seconds / 8 mins" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Typography Style *</label>
+            <input type="text" id="vo-typography" class="form-control" required placeholder="e.g. Bold Kinetic / Minimalist" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Voice Over *</label>
+            <input type="text" id="vo-voiceover" class="form-control" required placeholder="e.g. Hindi Male / Provided / None" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Background Music Preference *</label>
+          <input type="text" id="vo-music" class="form-control" required placeholder="e.g. Dark Phonk / Upbeat Corporate / Lo-Fi" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Reference Video (MP4/MOV/WEBM ≤ 50MB)</label>
+            <input type="file" id="vo-ref-video" class="form-control" accept="video/mp4,video/quicktime,video/webm" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Reference Image (JPG/PNG/WEBP ≤ 10MB)</label>
+            <input type="file" id="vo-ref-image" class="form-control" accept="image/jpeg,image/png,image/webp" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detailed Instructions *</label>
+          <textarea id="vo-instructions" class="form-control" required maxlength="1500" placeholder="Share pacing, color mood, Drive/raw footage links, transitions, etc."></textarea>
+        </div>
+        <button type="submit" id="vo-submit-btn" class="btn btn-primary" style="width:100%;">Submit Video Request to Admin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX POST MODAL -->
+  <div id="lightbox-modal" class="modal-backdrop hidden">
+    <div class="card modal-box" style="max-width:640px;">
+      <div class="modal-header">
+        <h3 style="font-size:1rem; font-weight:800;">Post Details</h3>
+        <button class="btn-icon modal-close" data-close="lightbox-modal" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div id="lightbox-body" class="modal-body" style="padding:0;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+      onAuthStateChanged, signOut
+    } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
+      query, where, orderBy, limit, startAfter, onSnapshot, serverTimestamp, runTransaction,
+      arrayUnion, arrayRemove, getCountFromServer
+    } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+    import {
+      getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject
+    } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-functions.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDNmvJiJtM3VcHzFNGRHTYfrNn2TcGGDzk",
+      authDomain: "ytcr-7b883.firebaseapp.com",
+      projectId: "ytcr-7b883",
+      storageBucket: "ytcr-7b883.firebasestorage.app",
+      messagingSenderId: "1002788979175",
+      appId: "1:1002788979175:web:92fb36779a67d155adbd42"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const functions = getFunctions(app, 'us-central1');
+    const googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+    const fnSendChatMessage = httpsCallable(functions, 'sendChatMessage');
+    const fnCreateRazorpayOrder = httpsCallable(functions, 'createRazorpayOrder');
+    const fnVerifyRazorpayPayment = httpsCallable(functions, 'verifyRazorpayPayment');
+    const fnSubmitVideoOrder = httpsCallable(functions, 'submitVideoOrderRequest');
+
+    const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=8b5cf6&color=fff&name=Creator';
+    const ORDER_STATUSES = [
+      'Payment Successful', 'Request Submitted', 'Accepted',
+      'In Progress', 'Completed', 'Delivered', 'Cancelled / Refund Pending'
+    ];
+
+    const state = {
+      authUser: null,
+      userDoc: null,
+      currentView: 'home',
+      feedFilter: 'all',
+      feedPosts: [],
+      feedCursor: null,
+      feedHasMore: true,
+      followingSet: new Set(),
+      savedSet: new Set(),
+      blockedSet: new Set(),
+      viewingProfileUid: null,
+      profileTab: 'posts',
+      activeConvId: null,
+      convTab: 'active',
+      conversations: [],
+      replyingToMsg: null,
+      wordUsage: { wordsUsed: 0, dailyLimit: 150, dateKey: '' },
+      activeCommentPostId: null,
+      replyingToComment: null,
+      commentsUnsub: null,
+      reportTarget: null,
+      unsubs: [],
+      chatUnsub: null,
+      exploreTag: '',
+      createMode: 'photo'
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function safeUrl(url, fallback = '') {
+      if (!url || typeof url !== 'string') return fallback;
+      return /^(https?:\/\/|blob:|data:image\/)/i.test(url) ? url : fallback;
+    }
+
+    function tsMillis(ts) {
+      if (!ts) return 0;
+      return ts.toMillis ? ts.toMillis() : new Date(ts).getTime();
+    }
+
+    function todayKey() {
+      return new Date(Date.now() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
+    }
+
+    function countWords(text) {
+      const trimmed = (text || '').trim();
+      return trimmed ? trimmed.split(/\s+/).length : 0;
+    }
+
+    function formatTime(ts) {
+      if (!ts) return 'Just now';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = $('toast-container');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      const icon = type === 'success' ? '✅' : type === 'error' ? '⚠️' : '✨';
+      el.innerHTML = `<span>${icon}</span><span>${esc(message)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 4200);
+    }
+
+    function validateFile(file, allowedTypes, maxMB) {
+      if (!file) return 'No file selected.';
+      if (!allowedTypes.includes(file.type)) return `Invalid file type (${file.type}).`;
+      if (file.size > maxMB * 1024 * 1024) return `File exceeds ${maxMB}MB limit.`;
+      return null;
+    }
+
+    async function uploadFileToStorage(path, file, onProgress) {
+      const r = storageRef(storage, path);
+      return new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(r, file, { contentType: file.type });
+        task.on('state_changed',
+          (snap) => { if (onProgress) onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)); },
+          (err) => reject(err),
+          async () => resolve({ url: await getDownloadURL(task.snapshot.ref), path })
+        );
+      });
+    }
+
+    function openModal(id) { $(id).classList.remove('hidden'); }
+    function closeModal(id) {
+      $(id).classList.add('hidden');
+      if (id === 'comments-modal' && state.commentsUnsub) { state.commentsUnsub(); state.commentsUnsub = null; }
+    }
+    document.querySelectorAll('.modal-close').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+
+    // Resilient query helper if composite index is not created yet
+    async function safeQueryDocs(indexedQ, fallbackQ) {
+      try {
+        return await getDocs(indexedQ);
+      } catch (err) {
+        if (err.code === 'failed-precondition' && fallbackQ) {
+          return await getDocs(fallbackQ);
+        }
+        throw err;
+      }
+    }
+
+    // THEME
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('cc_theme', theme);
+    }
+    applyTheme(localStorage.getItem('cc_theme') || 'dark');
+    $('theme-toggle-btn').addEventListener('click', () => {
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    $('welcome-theme-btn').addEventListener('click', () => {
+      applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    if (window.location.protocol === 'file:') $('file-protocol-warn').classList.remove('hidden');
+
+    // AUTHENTICATION
+    $('google-login-btn').addEventListener('click', async () => {
+      const btn = $('google-login-btn');
+      btn.disabled = true;
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (err) {
+        if (err.code === 'auth/popup-blocked') await signInWithRedirect(auth, googleProvider);
+        else showToast(err.message || 'Google Sign-In failed.', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    getRedirectResult(auth).catch(err => { if (err) showToast(err.message, 'error'); });
+
+    async function handleLogout() {
+      try {
+        if (state.authUser) {
+          await updateDoc(doc(db, 'users', state.authUser.uid), { isOnline: false, lastSeen: serverTimestamp() }).catch(() => {});
+        }
+        cleanupListeners();
+        await signOut(auth);
+        showToast('Logged out successfully', 'info');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+    $('sidebar-logout-btn').addEventListener('click', handleLogout);
+
+    function cleanupListeners() {
+      state.unsubs.forEach(u => { try { u(); } catch (_) {} });
+      state.unsubs = [];
+      if (state.chatUnsub) { try { state.chatUnsub(); } catch (_) {} state.chatUnsub = null; }
+      if (state.commentsUnsub) { try { state.commentsUnsub(); } catch (_) {} state.commentsUnsub = null; }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      cleanupListeners();
+      state.authUser = user;
+      if (!user) {
+        state.userDoc = null;
+        $('app-shell').classList.add('hidden');
+        $('setup-view').classList.add('hidden');
+        $('auth-view').classList.remove('hidden');
+        return;
+      }
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists() || !snap.data().username) {
+        $('auth-view').classList.add('hidden');
+        $('app-shell').classList.add('hidden');
+        $('setup-view').classList.remove('hidden');
+        $('setup-display-name').value = user.displayName || '';
+        $('setup-avatar-preview').src = safeUrl(user.photoURL, DEFAULT_AVATAR);
+      } else {
+        enterApp(snap.data());
+      }
+    });
+
+    // PROFILE SETUP
+    let setupAvatarFile = null;
+    $('setup-avatar-input').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const err = validateFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+      if (err) { showToast(err, 'error'); e.target.value = ''; return; }
+      setupAvatarFile = f;
+      $('setup-avatar-preview').src = URL.createObjectURL(f);
+    });
+
+    let usernameDebounce = null;
+    $('setup-username').addEventListener('input', (e) => {
+      const val = e.target.value.trim().toLowerCase();
+      e.target.value = val;
+      const statusEl = $('setup-username-status');
+      clearTimeout(usernameDebounce);
+      if (!/^[a-z0-9_.]{3,20}$/.test(val)) {
+        statusEl.textContent = 'Invalid format: 3-20 lowercase letters, numbers, _ or .';
+        statusEl.style.color = 'var(--danger)';
+        return;
+      }
+      statusEl.textContent = 'Checking availability...';
+      statusEl.style.color = 'var(--text-soft)';
+      usernameDebounce = setTimeout(async () => {
+        const uSnap = await getDoc(doc(db, 'usernames', val));
+        if (uSnap.exists() && uSnap.data().uid !== state.authUser.uid) {
+          statusEl.textContent = `@${val} is already taken.`;
+          statusEl.style.color = 'var(--danger)';
+        } else {
+          statusEl.textContent = `@${val} is available!`;
+          statusEl.style.color = 'var(--success)';
+        }
+      }, 350);
+    });
+
+    $('profile-setup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('setup-submit-btn');
+      const displayName = $('setup-display-name').value.trim();
+      const username = $('setup-username').value.trim().toLowerCase();
+      const bio = $('setup-bio').value.trim();
+
+      if (!/^[a-z0-9_.]{3,20}$/.test(username)) { showToast('Invalid username.', 'error'); return; }
+      btn.disabled = true;
+      btn.textContent = 'Setting up profile...';
+      try {
+        let photoURL = state.authUser.photoURL || DEFAULT_AVATAR;
+        if (setupAvatarFile) {
+          photoURL = (await uploadFileToStorage(`users/${state.authUser.uid}/avatar_${Date.now()}`, setupAvatarFile)).url;
+        }
+        const uid = state.authUser.uid;
+        await runTransaction(db, async (tx) => {
+          const unameRef = doc(db, 'usernames', username);
+          const unameSnap = await tx.get(unameRef);
+          if (unameSnap.exists() && unameSnap.data().uid !== uid) throw new Error('Username already taken.');
+          tx.set(unameRef, { uid });
+          tx.set(doc(db, 'users', uid), {
+            uid, email: state.authUser.email || '', displayName, username,
+            displayNameLower: displayName.toLowerCase(), photoURL, coverURL: '', bio,
+            isPrivate: false, isPro: false, proPlanName: '', proExpiresAt: null, dailyWordLimit: 150,
+            followersCount: 0, followingCount: 0, postsCount: 0, blockedUsers: [], role: 'user',
+            isOnline: true, lastSeen: serverTimestamp(), createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          }, { merge: true });
+        });
+        enterApp((await getDoc(doc(db, 'users', uid))).data());
+        showToast('Welcome to CREATOR CONNECT!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save & Enter CREATOR CONNECT';
+      }
+    });
+
+    // ENTER APP
+    async function enterApp(initialUserDoc) {
+      state.userDoc = initialUserDoc;
+      state.blockedSet = new Set(initialUserDoc.blockedUsers || []);
+      $('auth-view').classList.add('hidden');
+      $('setup-view').classList.add('hidden');
+      $('app-shell').classList.remove('hidden');
+
+      const uid = state.authUser.uid;
+      updateDoc(doc(db, 'users', uid), { isOnline: true, lastSeen: serverTimestamp() }).catch(() => {});
+
+      window.addEventListener('visibilitychange', () => {
+        if (!state.authUser) return;
+        updateDoc(doc(db, 'users', state.authUser.uid), {
+          isOnline: document.visibilityState === 'visible', lastSeen: serverTimestamp()
+        }).catch(() => {});
+      });
+
+      state.unsubs.push(onSnapshot(doc(db, 'users', uid), (snap) => {
+        if (snap.exists()) {
+          state.userDoc = snap.data();
+          state.blockedSet = new Set(state.userDoc.blockedUsers || []);
+          updateWordUsageUI();
+          if (state.currentView === 'profile' && state.viewingProfileUid === uid) renderProfile(uid);
+          if (state.currentView === 'plans') renderMembershipBanner();
+        }
+      }));
+
+      state.unsubs.push(onSnapshot(query(collection(db, 'follows'), where('followerUid', '==', uid)), (snap) => {
+        state.followingSet = new Set(snap.docs.map(d => d.data().targetUid));
+      }));
+
+      state.unsubs.push(onSnapshot(collection(db, 'users', uid, 'savedPosts'), (snap) => {
+        state.savedSet = new Set(snap.docs.map(d => d.id));
+      }));
+
+      state.unsubs.push(onSnapshot(doc(db, 'wordUsage', uid), (snap) => {
+        const tKey = todayKey();
+        if (snap.exists()) {
+          const d = snap.data();
+          state.wordUsage = d.dateKey === tKey
+            ? { wordsUsed: d.wordsUsed || 0, dailyLimit: d.dailyLimit || state.userDoc?.dailyWordLimit || 150, dateKey: d.dateKey }
+            : { wordsUsed: 0, dailyLimit: state.userDoc?.dailyWordLimit || 150, dateKey: tKey };
+        } else {
+          state.wordUsage = { wordsUsed: 0, dailyLimit: state.userDoc?.dailyWordLimit || 150, dateKey: tKey };
+        }
+        updateWordUsageUI();
+      }));
+
+      // Conversations listener (single-field array-contains works without composite index)
+      state.unsubs.push(onSnapshot(
+        query(collection(db, 'conversations'), where('participants', 'array-contains', uid)),
+        (snap) => {
+          state.conversations = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => tsMillis(b.lastMessageAt) - tsMillis(a.lastMessageAt));
+          renderConversationsList();
+          updateUnreadBadges();
+        }
+      ));
+
+      // Notifications listener
+      state.unsubs.push(onSnapshot(
+        query(collection(db, 'notifications'), where('recipientUid', 'in', [uid, 'ALL'])),
+        (snap) => {
+          const items = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt))
+            .slice(0, 40);
+          renderNotifications(items);
+        }
+      ));
+
+      switchView('home');
+    }
+
+    function updateWordUsageUI() {
+      const isProActive = state.userDoc?.isPro && (!state.userDoc?.proExpiresAt || tsMillis(state.userDoc.proExpiresAt) > Date.now());
+      const limitVal = isProActive && state.userDoc?.dailyWordLimit ? state.userDoc.dailyWordLimit : 150;
+      const used = state.wordUsage.wordsUsed || 0;
+      const limitLabel = limitVal === -1 ? '∞' : limitVal;
+      $('header-word-text').textContent = `${used}/${limitLabel}`;
+      $('word-limit-label').textContent = `Daily Words: ${used} / ${limitLabel}`;
+      const pct = limitVal === -1 ? 15 : Math.min(100, Math.round((used / limitVal) * 100));
+      $('word-limit-fill').style.width = `${pct}%`;
+      $('word-limit-fill').style.background = pct >= 90 ? 'var(--danger)' : pct >= 70 ? 'var(--warning)' : 'var(--gradient)';
+    }
+
+    // NAVIGATION
+    function switchView(viewName, extra = null) {
+      state.currentView = viewName;
+      ['home', 'explore', 'create', 'messages', 'profile', 'orders', 'plans'].forEach(v => {
+        $(`view-${v}`).classList.toggle('hidden', v !== viewName);
+      });
+      document.querySelectorAll('[data-nav]').forEach(btn => {
+        if (btn.classList.contains('side-nav-btn') || btn.classList.contains('bottom-nav-btn')) {
+          btn.classList.toggle('active', btn.dataset.nav === viewName);
+        }
+      });
+      if (viewName === 'home') loadFeed(true);
+      if (viewName === 'explore') loadExplore();
+      if (viewName === 'profile') renderProfile(extra || state.authUser.uid);
+      if (viewName === 'orders') loadOrders();
+      if (viewName === 'plans') loadPlans();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.addEventListener('click', (e) => {
+      const navBtn = e.target.closest('[data-nav]');
+      if (navBtn) switchView(navBtn.dataset.nav);
+    });
+
+    // BEFORE / AFTER SLIDER
+    function renderBeforeAfterHTML(beforeUrl, afterUrl, idSuffix) {
+      return `
+        <div class="ba-wrapper" data-ba-id="${esc(idSuffix)}">
+          <img class="ba-img" src="${esc(safeUrl(afterUrl))}" alt="After Edit" loading="lazy" />
+          <div class="ba-before-layer" style="width:50%;">
+            <img src="${esc(safeUrl(beforeUrl))}" alt="Before Edit" loading="lazy" />
+          </div>
+          <div class="ba-handle" style="left:50%;">↔</div>
+          <span class="ba-label ba-label-before">BEFORE</span>
+          <span class="ba-label ba-label-after">AFTER</span>
+          <input type="range" min="0" max="100" value="50" class="ba-range" aria-label="Before and After comparison slider" />
+        </div>
+      `;
+    }
+
+    function initBeforeAfterSliders(root = document) {
+      root.querySelectorAll('.ba-wrapper').forEach(wrap => {
+        const range = wrap.querySelector('.ba-range');
+        const beforeLayer = wrap.querySelector('.ba-before-layer');
+        const handle = wrap.querySelector('.ba-handle');
+        const beforeImg = beforeLayer.querySelector('img');
+        const syncWidth = () => { beforeImg.style.width = `${wrap.clientWidth}px`; };
+        syncWidth();
+        beforeImg.addEventListener('load', syncWidth);
+        window.addEventListener('resize', syncWidth);
+        range.addEventListener('input', (e) => {
+          beforeLayer.style.width = `${e.target.value}%`;
+          handle.style.left = `${e.target.value}%`;
+        });
+      });
+    }
+
+    // FEED
+    $('feed-filter-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-feed-filter]');
+      if (!tab) return;
+      document.querySelectorAll('#feed-filter-tabs .pill-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.feedFilter = tab.dataset.feedFilter;
+      loadFeed(true);
+    });
+    $('feed-load-more-btn').addEventListener('click', () => loadFeed(false));
+
+    async function loadFeed(reset = true) {
+      const listEl = $('feed-list');
+      if (reset) {
+        state.feedPosts = [];
+        state.feedCursor = null;
+        state.feedHasMore = true;
+        listEl.innerHTML = Array(3).fill('<div class="card" style="padding:16px;"><div class="skeleton" style="height:260px;"></div></div>').join('');
+      }
+      try {
+        const constraints = [where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(10)];
+        if (!reset && state.feedCursor) constraints.push(startAfter(state.feedCursor));
+        const snap = await safeQueryDocs(
+          query(collection(db, 'posts'), ...constraints),
+          query(collection(db, 'posts'), where('status', '==', 'approved'), limit(30))
+        );
+        if (reset) listEl.innerHTML = '';
+
+        if (snap.empty) {
+          state.feedHasMore = false;
+          $('feed-load-more-btn').classList.add('hidden');
+          if (state.feedPosts.length === 0) {
+            listEl.innerHTML = `<div class="card empty-state"><span style="font-size:2.2rem;">📸</span><strong>No Approved Posts Yet</strong><p style="font-size:0.85rem;">Upload a photo or Before/After edit in Create. Once approved by Admin, it appears here!</p><button class="btn btn-primary btn-sm" data-nav="create">Create First Post</button></div>`;
+          }
+          return;
+        }
+
+        state.feedCursor = snap.docs[snap.docs.length - 1];
+        state.feedHasMore = snap.docs.length === 10;
+        $('feed-load-more-btn').classList.toggle('hidden', !state.feedHasMore);
+
+        const uid = state.authUser.uid;
+        let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt))
+          .filter(p => !state.blockedSet.has(p.authorUid))
+          .filter(p => !p.authorIsPrivate || p.authorUid === uid || state.followingSet.has(p.authorUid));
+
+        if (state.feedFilter === 'following') posts = posts.filter(p => state.followingSet.has(p.authorUid) || p.authorUid === uid);
+        else if (state.feedFilter === 'trending') posts = posts.filter(p => p.isTrending || (p.likesCount || 0) >= 3);
+        else if (state.feedFilter === 'before_after') posts = posts.filter(p => p.type === 'before_after');
+
+        if (posts.length === 0 && reset) {
+          listEl.innerHTML = `<div class="card empty-state"><span>✨</span><strong>No posts match this filter yet.</strong></div>`;
+          return;
+        }
+        for (const p of posts) {
+          state.feedPosts.push(p);
+          listEl.appendChild(await buildPostCard(p));
+        }
+        initBeforeAfterSliders(listEl);
+      } catch (err) {
+        listEl.innerHTML = `<div class="card empty-state"><strong>Feed Error</strong><p style="font-size:0.82rem;">${esc(err.message)}</p></div>`;
+      }
+    }
+
+    async function buildPostCard(post) {
+      const uid = state.authUser.uid;
+      const [likeSnap, likesCountSnap, commentsCountSnap] = await Promise.all([
+        getDoc(doc(db, 'posts', post.id, 'likes', uid)),
+        getCountFromServer(collection(db, 'posts', post.id, 'likes')),
+        getCountFromServer(collection(db, 'posts', post.id, 'comments'))
+      ]);
+      const isLiked = likeSnap.exists();
+      const liveLikes = Math.max(post.likesCount || 0, likesCountSnap.data().count);
+      const liveComments = Math.max(post.commentsCount || 0, commentsCountSnap.data().count);
+      const isSaved = state.savedSet.has(post.id);
+      const isOwn = post.authorUid === uid;
+      const isFollowing = state.followingSet.has(post.authorUid);
+
+      const card = document.createElement('article');
+      card.className = 'card post-card';
+      const mediaHTML = post.type === 'before_after'
+        ? renderBeforeAfterHTML(post.beforeImageURL, post.afterImageURL, post.id)
+        : `<div class="post-media"><img src="${esc(safeUrl(post.imageURL))}" alt="Post" loading="lazy" /></div>`;
+
+      const baMetaHTML = post.type === 'before_after'
+        ? `<div class="ba-meta-box">
+             <div><span class="badge badge-primary">✨ Before/After</span> <span style="margin-left:6px; color:var(--text-muted);">${esc(post.editingDate || '')}</span></div>
+             <div style="color:#fbbf24; font-weight:700;">${'★'.repeat(post.resultRating || 5)}${'☆'.repeat(5 - (post.resultRating || 5))} (${post.resultRating || 5}/5)</div>
+             <div style="width:100%; color:var(--text-muted); font-size:0.8rem;">${esc(post.editingDescription || '')}</div>
+           </div>`
+        : '';
+
+      const tagsHTML = (post.hashtags || []).map(t => `<span class="hashtag" data-hashtag="${esc(t)}">#${esc(t)}</span>`).join('');
+      card.innerHTML = `
+        <div class="post-header">
+          <div class="post-author" data-open-profile="${esc(post.authorUid)}">
+            <div class="avatar-ring"><img src="${esc(safeUrl(post.authorPhoto, DEFAULT_AVATAR))}" class="avatar" /></div>
+            <div class="post-author-meta">
+              <div class="post-author-name"><span>${esc(post.authorName || 'Creator')}</span>${post.authorIsPro ? '<span class="badge badge-pro">PRO</span>' : ''}</div>
+              <div class="post-author-sub">@${esc(post.authorUsername || 'user')} • ${esc(formatTime(post.createdAt))}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            ${!isOwn && !isFollowing ? `<button class="btn btn-primary btn-sm" data-follow-uid="${esc(post.authorUid)}">Follow</button>` : ''}
+            ${isOwn ? `<button class="btn btn-danger btn-sm" data-delete-post="${esc(post.id)}">Delete</button>` : ''}
+          </div>
+        </div>
+        ${mediaHTML}
+        ${baMetaHTML}
+        <div class="post-actions">
+          <div class="post-actions-left">
+            <button class="action-btn ${isLiked ? 'liked' : ''}" data-like-post="${esc(post.id)}"><span>${isLiked ? '❤️' : '🤍'}</span><span class="like-count">${liveLikes}</span></button>
+            <button class="action-btn" data-comment-post="${esc(post.id)}"><span>💬</span><span>${liveComments}</span></button>
+            <button class="action-btn" data-share-post="${esc(post.id)}"><span>🔗</span><span>Share</span></button>
+          </div>
+          <button class="action-btn ${isSaved ? 'saved' : ''}" data-save-post="${esc(post.id)}"><span>${isSaved ? '🔖 Saved' : '📑 Save'}</span></button>
+        </div>
+        <div class="post-body"><strong>@${esc(post.authorUsername || 'user')}</strong> ${esc(post.caption || '')}<div style="margin-top:6px;">${tagsHTML}</div></div>
+      `;
+      return card;
+    }
+
+    document.addEventListener('click', async (e) => {
+      const uid = state.authUser?.uid;
+      if (!uid) return;
+
+      const profTrigger = e.target.closest('[data-open-profile]');
+      if (profTrigger) { switchView('profile', profTrigger.dataset.openProfile); return; }
+
+      const tagTrigger = e.target.closest('[data-hashtag]');
+      if (tagTrigger) { state.exploreTag = tagTrigger.dataset.hashtag; switchView('explore'); return; }
+
+      const likeBtn = e.target.closest('[data-like-post]');
+      if (likeBtn) {
+        const postId = likeBtn.dataset.likePost;
+        const likeRef = doc(db, 'posts', postId, 'likes', uid);
+        const countEl = likeBtn.querySelector('.like-count');
+        const currentCount = parseInt(countEl.textContent, 10) || 0;
+        const wasLiked = likeBtn.classList.contains('liked');
+        likeBtn.classList.toggle('liked', !wasLiked);
+        likeBtn.firstElementChild.textContent = wasLiked ? '🤍' : '❤️';
+        countEl.textContent = Math.max(0, currentCount + (wasLiked ? -1 : 1));
+        try {
+          if (wasLiked) await deleteDoc(likeRef);
+          else await setDoc(likeRef, { uid, createdAt: serverTimestamp() });
+        } catch (err) { showToast(err.message, 'error'); }
+        return;
+      }
+
+      const saveBtn = e.target.closest('[data-save-post]');
+      if (saveBtn) {
+        const postId = saveBtn.dataset.savePost;
+        const saveRef = doc(db, 'users', uid, 'savedPosts', postId);
+        const wasSaved = saveBtn.classList.contains('saved');
+        try {
+          if (wasSaved) {
+            await deleteDoc(saveRef);
+            saveBtn.classList.remove('saved');
+            saveBtn.innerHTML = '<span>📑 Save</span>';
+            showToast('Removed from Saved', 'info');
+          } else {
+            await setDoc(saveRef, { postId, savedAt: serverTimestamp() });
+            saveBtn.classList.add('saved');
+            saveBtn.innerHTML = '<span>🔖 Saved</span>';
+            showToast('Post saved!', 'success');
+          }
+        } catch (err) { showToast(err.message, 'error'); }
+        return;
+      }
+
+      const shareBtn = e.target.closest('[data-share-post]');
+      if (shareBtn) {
+        const url = `${window.location.origin}${window.location.pathname}?post=${shareBtn.dataset.sharePost}`;
+        if (navigator.share) navigator.share({ title: 'CREATOR CONNECT Post', url }).catch(() => {});
+        else { navigator.clipboard?.writeText(url); showToast('Post link copied!', 'success'); }
+        return;
+      }
+
+      const commentBtn = e.target.closest('[data-comment-post]');
+      if (commentBtn) { openCommentsModal(commentBtn.dataset.commentPost); return; }
+
+      const followBtn = e.target.closest('[data-follow-uid]');
+      if (followBtn) { await toggleFollowUser(followBtn.dataset.followUid, followBtn); return; }
+
+      const delBtn = e.target.closest('[data-delete-post]');
+      if (delBtn && confirm('Delete this post permanently?')) await deleteOwnPost(delBtn.dataset.deletePost);
+    });
+
+    async function deleteOwnPost(postId) {
+      try {
+        const pRef = doc(db, 'posts', postId);
+        const snap = await getDoc(pRef);
+        if (!snap.exists() || snap.data().authorUid !== state.authUser.uid) return;
+        const data = snap.data();
+        for (const path of [data.storagePath, data.beforeStoragePath, data.afterStoragePath]) {
+          if (path) await deleteObject(storageRef(storage, path)).catch(() => {});
+        }
+        await deleteDoc(pRef);
+        showToast('Post deleted.', 'success');
+        if (state.currentView === 'home') loadFeed(true);
+        if (state.currentView === 'profile') renderProfile(state.authUser.uid);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // COMMENTS
+    function openCommentsModal(postId) {
+      state.activeCommentPostId = postId;
+      state.replyingToComment = null;
+      $('comment-reply-indicator').classList.add('hidden');
+      openModal('comments-modal');
+      if (state.commentsUnsub) state.commentsUnsub();
+      const listEl = $('comments-list');
+      listEl.innerHTML = '<div class="skeleton" style="height:60px;"></div>';
+
+      state.commentsUnsub = onSnapshot(
+        query(collection(db, 'posts', postId, 'comments'), orderBy('createdAt', 'asc')),
+        (snap) => {
+          const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          if (!all.length) {
+            listEl.innerHTML = '<div class="empty-state"><span>💬</span><span>No comments yet. Be the first!</span></div>';
+            return;
+          }
+          const roots = all.filter(c => !c.parentId);
+          const repliesMap = {};
+          all.filter(c => c.parentId).forEach(r => { (repliesMap[r.parentId] = repliesMap[r.parentId] || []).push(r); });
+          listEl.innerHTML = roots.map(c => `
+            <div style="padding:10px; background:var(--input-bg); border-radius:12px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <img src="${esc(safeUrl(c.authorPhoto, DEFAULT_AVATAR))}" class="avatar" style="width:28px; height:28px;" />
+                  <strong style="font-size:0.84rem;">@${esc(c.authorUsername)}</strong>
+                </div>
+                <span style="font-size:0.72rem; color:var(--text-soft);">${esc(formatTime(c.createdAt))}</span>
+              </div>
+              <p style="font-size:0.87rem; margin:6px 0 6px 36px;">${esc(c.text)}</p>
+              <div style="margin-left:36px;">
+                <button type="button" class="btn btn-sm" style="padding:2px 6px; font-size:0.75rem; color:var(--cyan);" data-reply-comment="${esc(c.id)}" data-reply-user="${esc(c.authorUsername)}">Reply</button>
+              </div>
+              ${(repliesMap[c.id] || []).map(r => `
+                <div style="margin:8px 0 0 36px; padding:8px 10px; border-left:2px solid var(--primary); background:var(--card); border-radius:8px;">
+                  <div style="font-size:0.78rem; font-weight:700;">@${esc(r.authorUsername)} <span style="font-weight:400; color:var(--text-soft);">${esc(formatTime(r.createdAt))}</span></div>
+                  <div style="font-size:0.83rem; margin-top:2px;">${esc(r.text)}</div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('');
+        }
+      );
+    }
+
+    $('comments-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-reply-comment]');
+      if (!btn) return;
+      state.replyingToComment = { id: btn.dataset.replyComment, username: btn.dataset.replyUser };
+      $('comment-reply-label').textContent = `Replying to @${btn.dataset.replyUser}`;
+      $('comment-reply-indicator').classList.remove('hidden');
+      $('comment-input').focus();
+    });
+    $('comment-reply-cancel').addEventListener('click', () => {
+      state.replyingToComment = null;
+      $('comment-reply-indicator').classList.add('hidden');
+    });
+    $('comment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = $('comment-input').value.trim();
+      if (!text || !state.activeCommentPostId) return;
+      try {
+        await addDoc(collection(db, 'posts', state.activeCommentPostId, 'comments'), {
+          authorUid: state.authUser.uid, authorName: state.userDoc.displayName,
+          authorUsername: state.userDoc.username, authorPhoto: state.userDoc.photoURL || DEFAULT_AVATAR,
+          text, parentId: state.replyingToComment ? state.replyingToComment.id : null, createdAt: serverTimestamp()
+        });
+        $('comment-input').value = '';
+        state.replyingToComment = null;
+        $('comment-reply-indicator').classList.add('hidden');
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // CREATE UPLOADER
+    $('create-mode-tabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-create-mode]');
+      if (!tab) return;
+      document.querySelectorAll('#create-mode-tabs .pill-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.createMode = tab.dataset.createMode;
+      $('create-single-wrap').classList.toggle('hidden', state.createMode !== 'photo');
+      $('create-ba-wrap').classList.toggle('hidden', state.createMode !== 'before_after');
+    });
+
+    $('create-single-file').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const err = validateFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+      if (err) { showToast(err, 'error'); e.target.value = ''; return; }
+      $('create-single-preview').src = URL.createObjectURL(f);
+      $('create-single-preview').classList.remove('hidden');
+    });
+
+    function updateBAPreview() {
+      const bf = $('create-before-file').files[0];
+      const af = $('create-after-file').files[0];
+      if (bf && af) {
+        const box = $('create-ba-preview-box');
+        box.innerHTML = renderBeforeAfterHTML(URL.createObjectURL(bf), URL.createObjectURL(af), 'preview');
+        box.classList.remove('hidden');
+        initBeforeAfterSliders(box);
+      }
+    }
+    ['create-before-file', 'create-after-file'].forEach(id => {
+      $(id).addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const err = validateFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+        if (err) { showToast(err, 'error'); e.target.value = ''; return; }
+        updateBAPreview();
+      });
+    });
+
+    $('create-post-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('create-submit-btn');
+      const caption = $('create-caption').value.trim();
+      const hashtags = $('create-hashtags').value
+        .split(/[\s,]+/).map(t => t.replace(/^#/, '').toLowerCase().replace(/[^a-z0-9_]/g, ''))
+        .filter(Boolean).slice(0, 15);
+      const progWrap = $('upload-progress-wrap'), progFill = $('upload-progress-fill'), progPct = $('upload-progress-pct');
+
+      try {
+        btn.disabled = true;
+        const uid = state.authUser.uid;
+        let payload = {
+          authorUid: uid, authorName: state.userDoc.displayName, authorUsername: state.userDoc.username,
+          authorPhoto: state.userDoc.photoURL || DEFAULT_AVATAR, authorIsPro: !!state.userDoc.isPro,
+          authorIsPrivate: !!state.userDoc.isPrivate, type: state.createMode, caption, hashtags,
+          status: 'pending', rejectionReason: '', likesCount: 0, commentsCount: 0, isTrending: false,
+          createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        };
+
+        if (state.createMode === 'photo') {
+          const f = $('create-single-file').files[0];
+          const err = validateFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+          if (err) { showToast(err, 'error'); btn.disabled = false; return; }
+          progWrap.classList.remove('hidden');
+          const up = await uploadFileToStorage(`posts/${uid}/photo_${Date.now()}`, f, (p) => { progFill.style.width = `${p}%`; progPct.textContent = `${p}%`; });
+          payload.imageURL = up.url; payload.storagePath = up.path;
+        } else {
+          const bf = $('create-before-file').files[0], af = $('create-after-file').files[0];
+          const errB = validateFile(bf, ['image/jpeg', 'image/png', 'image/webp'], 10);
+          const errA = validateFile(af, ['image/jpeg', 'image/png', 'image/webp'], 10);
+          if (errB || errA) { showToast(errB || errA, 'error'); btn.disabled = false; return; }
+          const editDesc = $('create-editing-desc').value.trim(), editDate = $('create-editing-date').value;
+          if (!editDesc || !editDate) { showToast('Enter Editing Description & Date.', 'error'); btn.disabled = false; return; }
+          progWrap.classList.remove('hidden');
+          const upB = await uploadFileToStorage(`posts/${uid}/before_${Date.now()}`, bf, (p) => { progFill.style.width = `${Math.round(p * 0.5)}%`; progPct.textContent = `${Math.round(p * 0.5)}%`; });
+          const upA = await uploadFileToStorage(`posts/${uid}/after_${Date.now()}`, af, (p) => { progFill.style.width = `${50 + Math.round(p * 0.5)}%`; progPct.textContent = `${50 + Math.round(p * 0.5)}%`; });
+          payload.beforeImageURL = upB.url; payload.beforeStoragePath = upB.path;
+          payload.afterImageURL = upA.url; payload.afterStoragePath = upA.path;
+          payload.editingDescription = editDesc; payload.editingDate = editDate;
+          payload.resultRating = parseInt($('create-rating').value, 10) || 5;
+        }
+
+        await addDoc(collection(db, 'posts'), payload);
+        $('create-post-form').reset();
+        $('create-single-preview').classList.add('hidden');
+        $('create-ba-preview-box').classList.add('hidden');
+        progWrap.classList.add('hidden');
+        showToast('Uploaded! Waiting for Admin Approval.', 'success');
+        state.profileTab = 'status';
+        switchView('profile', uid);
+      } catch (err) { showToast(err.message, 'error'); } finally { btn.disabled = false; }
+    });
+
+    // EXPLORE
+    $('explore-tag-chips').addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-tag]');
+      if (!chip) return;
+      document.querySelectorAll('#explore-tag-chips .pill-tab').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.exploreTag = chip.dataset.tag;
+      loadExplore();
+    });
+
+    let searchTimer = null;
+    $('explore-search-input').addEventListener('input', (e) => {
+      const qVal = e.target.value.trim().toLowerCase();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => runExploreSearch(qVal), 320);
+    });
+
+    async function runExploreSearch(qVal) {
+      const userBox = $('explore-user-results');
+      if (!qVal) { userBox.classList.add('hidden'); state.exploreTag = ''; loadExplore(); return; }
+      if (qVal.startsWith('#')) { userBox.classList.add('hidden'); state.exploreTag = qVal.slice(1); loadExplore(); return; }
+
+      const cleanQ = qVal.replace(/^@/, '');
+      const uSnap = await getDocs(query(collection(db, 'users'), where('username', '>=', cleanQ), where('username', '<=', cleanQ + '\uf8ff'), limit(8)));
+      const users = uSnap.docs.map(d => d.data()).filter(u => !state.blockedSet.has(u.uid));
+      if (users.length > 0) {
+        userBox.classList.remove('hidden');
+        userBox.innerHTML = `<div class="card" style="padding:12px; display:flex; flex-direction:column; gap:10px;">
+          <div style="font-size:0.78rem; font-weight:700; color:var(--text-soft);">MATCHING CREATORS</div>
+          ${users.map(u => `
+            <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" data-open-profile="${esc(u.uid)}">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${esc(safeUrl(u.photoURL, DEFAULT_AVATAR))}" class="avatar" />
+                <div>
+                  <div style="font-weight:700; font-size:0.9rem;">${esc(u.displayName)} ${u.isPro ? '<span class="badge badge-pro">PRO</span>' : ''}</div>
+                  <div style="font-size:0.78rem; color:var(--text-soft);">@${esc(u.username)} ${u.isPrivate ? '🔒' : ''}</div>
+                </div>
+              </div>
+              <span class="btn btn-secondary btn-sm">View</span>
+            </div>
+          `).join('')}
+        </div>`;
+      } else userBox.classList.add('hidden');
+
+      state.exploreTag = cleanQ;
+      loadExplore();
+    }
+
+    async function loadExplore() {
+      const grid = $('explore-grid');
+      grid.innerHTML = Array(6).fill('<div class="explore-tile skeleton"></div>').join('');
+      try {
+        const snap = await safeQueryDocs(
+          query(collection(db, 'posts'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'), limit(30)),
+          query(collection(db, 'posts'), where('status', '==', 'approved'), limit(40))
+        );
+        const uid = state.authUser.uid;
+        let items = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt))
+          .filter(p => !state.blockedSet.has(p.authorUid))
+          .filter(p => !p.authorIsPrivate || p.authorUid === uid || state.followingSet.has(p.authorUid));
+
+        if (state.exploreTag) {
+          items = items.filter(p => (p.hashtags || []).includes(state.exploreTag) || (p.caption || '').toLowerCase().includes(state.exploreTag));
+        }
+        if (!items.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><span>🔍</span><strong>No matching approved posts</strong></div>'; return; }
+
+        grid.innerHTML = items.map(p => `
+          <div class="explore-tile" data-open-lightbox="${esc(p.id)}">
+            <img src="${esc(safeUrl(p.type === 'before_after' ? p.afterImageURL : p.imageURL))}" alt="Post" loading="lazy" />
+            ${p.type === 'before_after' ? '<span class="explore-tile-badge">B/A ✨</span>' : ''}
+            <div class="explore-tile-overlay"><span>❤️ ${p.likesCount || 0}</span><span>💬 ${p.commentsCount || 0}</span></div>
+          </div>
+        `).join('');
+      } catch (err) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${esc(err.message)}</div>`; }
+    }
+
+    document.addEventListener('click', async (e) => {
+      const tile = e.target.closest('[data-open-lightbox]');
+      if (!tile) return;
+      const snap = await getDoc(doc(db, 'posts', tile.dataset.openLightbox));
+      if (!snap.exists()) return;
+      const body = $('lightbox-body');
+      body.innerHTML = '';
+      const card = await buildPostCard({ id: snap.id, ...snap.data() });
+      card.style.border = 'none'; card.style.boxShadow = 'none';
+      body.appendChild(card);
+      initBeforeAfterSliders(body);
+      openModal('lightbox-modal');
+    });
+
+    // PROFILE
+    async function renderProfile(targetUid) {
+      state.viewingProfileUid = targetUid;
+      const container = $('profile-container');
+      container.innerHTML = '<div class="card" style="padding:24px;"><div class="skeleton" style="height:200px;"></div></div>';
+      try {
+        const myUid = state.authUser.uid, isOwn = targetUid === myUid;
+        const userSnap = await getDoc(doc(db, 'users', targetUid));
+        if (!userSnap.exists()) { container.innerHTML = '<div class="card empty-state"><strong>User not found</strong></div>'; return; }
+        const u = userSnap.data();
+        const isFollowing = state.followingSet.has(targetUid);
+        let hasRequested = false;
+        if (!isOwn && !isFollowing) {
+          const reqSnap = await getDoc(doc(db, 'followRequests', `${targetUid}_${myUid}`));
+          hasRequested = reqSnap.exists() && reqSnap.data().status === 'pending';
+        }
+
+        const [followersCountSnap, followingCountSnap, approvedPostsSnap] = await Promise.all([
+          getCountFromServer(query(collection(db, 'follows'), where('targetUid', '==', targetUid))),
+          getCountFromServer(query(collection(db, 'follows'), where('followerUid', '==', targetUid))),
+          getCountFromServer(query(collection(db, 'posts'), where('authorUid', '==', targetUid), where('status', '==', 'approved')))
+        ]);
+
+        const followersCount = followersCountSnap.data().count;
+        const followingCount = followingCountSnap.data().count;
+        const postsCount = approvedPostsSnap.data().count;
+        const canViewPrivateContent = isOwn || !u.isPrivate || isFollowing;
+
+        let pendingRequests = [];
+        if (isOwn) {
+          const rSnap = await getDocs(query(collection(db, 'followRequests'), where('toUid', '==', myUid), where('status', '==', 'pending')));
+          pendingRequests = rSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
+        const followBtnText = isFollowing ? 'Following ✓' : hasRequested ? 'Requested ⏳' : 'Follow';
+        const followBtnClass = isFollowing || hasRequested ? 'btn-secondary' : 'btn-primary';
+
+        container.innerHTML = `
+          <div class="card" style="overflow:hidden; margin-bottom:16px;">
+            <div class="profile-cover">${u.coverURL ? `<img src="${esc(safeUrl(u.coverURL))}" alt="Cover" />` : ''}</div>
+            <div class="profile-top">
+              <div class="profile-avatar-wrap">
+                <img src="${esc(safeUrl(u.photoURL, DEFAULT_AVATAR))}" class="profile-avatar-lg" />
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  ${isOwn
+                    ? `<button id="open-edit-profile-btn" class="btn btn-secondary btn-sm">✏️ Edit Profile</button>
+                       <button id="profile-logout-btn" class="btn btn-danger btn-sm">Logout</button>`
+                    : `<button id="profile-follow-btn" class="btn ${followBtnClass} btn-sm">${followBtnText}</button>
+                       <button id="profile-msg-btn" class="btn btn-secondary btn-sm">💬 Message</button>
+                       <button id="profile-safety-btn" class="btn btn-danger btn-sm">⚠️ Block/Report</button>`
+                  }
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <h2 style="font-size:1.3rem; font-weight:800;">${esc(u.displayName)}</h2>
+                ${u.isPro ? `<span class="badge badge-pro">👑 PRO</span>` : ''}
+                ${u.isPrivate ? `<span class="badge badge-pending">🔒 Private</span>` : ''}
+              </div>
+              <div style="font-size:0.86rem; color:var(--text-soft); margin-bottom:8px;">@${esc(u.username)}</div>
+              <p style="font-size:0.9rem; line-height:1.5;">${esc(u.bio || 'Creator on CREATOR CONNECT')}</p>
+
+              <div class="profile-stats">
+                <div><div class="stat-num">${postsCount}</div><div class="stat-label">Posts</div></div>
+                <div style="cursor:${canViewPrivateContent ? 'pointer' : 'default'};" id="stat-followers-btn"><div class="stat-num">${followersCount}</div><div class="stat-label">Followers</div></div>
+                <div style="cursor:${canViewPrivateContent ? 'pointer' : 'default'};" id="stat-following-btn"><div class="stat-num">${followingCount}</div><div class="stat-label">Following</div></div>
+              </div>
+
+              ${isOwn && pendingRequests.length > 0 ? `
+                <div style="padding:14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.28); border-radius:14px; margin-top:12px;">
+                  <div style="font-weight:800; font-size:0.88rem; margin-bottom:10px;">Follow Requests (${pendingRequests.length})</div>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    ${pendingRequests.map(req => `
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <span style="font-size:0.86rem; font-weight:600; cursor:pointer;" data-open-profile="${esc(req.fromUid)}">@${esc(req.fromUsername || 'creator')}</span>
+                        <div style="display:flex; gap:6px;">
+                          <button class="btn btn-primary btn-sm" data-accept-req="${esc(req.id)}" data-from-uid="${esc(req.fromUid)}">Accept</button>
+                          <button class="btn btn-danger btn-sm" data-reject-req="${esc(req.id)}">Reject</button>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div id="profile-content-area"></div>
+        `;
+
+        if (isOwn) {
+          $('open-edit-profile-btn').addEventListener('click', openEditProfileModal);
+          $('profile-logout-btn').addEventListener('click', handleLogout);
+        } else {
+          $('profile-follow-btn').addEventListener('click', () => toggleFollowUser(targetUid, $('profile-follow-btn')).then(() => renderProfile(targetUid)));
+          $('profile-msg-btn').addEventListener('click', () => startOrOpenChat(u));
+          $('profile-safety-btn').addEventListener('click', () => openReportModal(targetUid));
+        }
+
+        if (canViewPrivateContent) {
+          $('stat-followers-btn').addEventListener('click', () => openFollowListModal(targetUid, 'followers'));
+          $('stat-following-btn').addEventListener('click', () => openFollowListModal(targetUid, 'following'));
+          renderProfileContentTabs(targetUid, isOwn);
+        } else {
+          $('profile-content-area').innerHTML = `<div class="card empty-state"><span style="font-size:2.4rem;">🔒</span><strong>This Account is Private</strong><p style="font-size:0.85rem;">Follow @${esc(u.username)} and wait for approval to view their posts and Before/After portfolio.</p></div>`;
+        }
+      } catch (err) { container.innerHTML = `<div class="card empty-state">${esc(err.message)}</div>`; }
+    }
+
+    async function renderProfileContentTabs(targetUid, isOwn) {
+      const area = $('profile-content-area');
+      area.innerHTML = `
+        <div class="pill-tabs" id="profile-subtabs">
+          <button class="pill-tab ${state.profileTab === 'posts' ? 'active' : ''}" data-ptab="posts">📸 Posts Grid</button>
+          <button class="pill-tab ${state.profileTab === 'portfolio' ? 'active' : ''}" data-ptab="portfolio">✨ Creator Portfolio (B/A)</button>
+          ${isOwn ? `<button class="pill-tab ${state.profileTab === 'saved' ? 'active' : ''}" data-ptab="saved">🔖 Saved</button>` : ''}
+          ${isOwn ? `<button class="pill-tab ${state.profileTab === 'status' ? 'active' : ''}" data-ptab="status">⏳ Pending / Rejected</button>` : ''}
+        </div>
+        <div id="profile-tab-body"></div>
+      `;
+      $('profile-subtabs').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-ptab]');
+        if (!b) return;
+        state.profileTab = b.dataset.ptab;
+        renderProfileContentTabs(targetUid, isOwn);
+      });
+
+      const body = $('profile-tab-body');
+      body.innerHTML = '<div class="skeleton" style="height:180px;"></div>';
+
+      // Single-field query where('authorUid', '==', targetUid) avoids composite index failures
+      const allUserPostsSnap = await getDocs(query(collection(db, 'posts'), where('authorUid', '==', targetUid)));
+      const allUserPosts = allUserPostsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt));
+
+      if (state.profileTab === 'posts') {
+        const posts = allUserPosts.filter(p => p.status === 'approved');
+        if (!posts.length) { body.innerHTML = '<div class="card empty-state"><span>🖼️</span><strong>No approved posts yet</strong></div>'; return; }
+        body.innerHTML = `<div class="explore-grid">${posts.map(p => `
+          <div class="explore-tile" data-open-lightbox="${esc(p.id)}">
+            <img src="${esc(safeUrl(p.type === 'before_after' ? p.afterImageURL : p.imageURL))}" loading="lazy" />
+            ${p.type === 'before_after' ? '<span class="explore-tile-badge">B/A ✨</span>' : ''}
+          </div>
+        `).join('')}</div>`;
+      } else if (state.profileTab === 'portfolio') {
+        const items = allUserPosts.filter(p => p.status === 'approved' && p.type === 'before_after');
+        if (!items.length) { body.innerHTML = '<div class="card empty-state"><span>✨</span><strong>No Before/After showcase items yet</strong></div>'; return; }
+        body.innerHTML = '';
+        for (const p of items) body.appendChild(await buildPostCard(p));
+        initBeforeAfterSliders(body);
+      } else if (state.profileTab === 'saved' && isOwn) {
+        const ids = Array.from(state.savedSet);
+        if (!ids.length) { body.innerHTML = '<div class="card empty-state"><span>🔖</span><strong>No saved posts yet</strong></div>'; return; }
+        const docs = await Promise.all(ids.slice(0, 24).map(id => getDoc(doc(db, 'posts', id))));
+        const savedPosts = docs.filter(d => d.exists() && d.data().status === 'approved').map(d => ({ id: d.id, ...d.data() }));
+        body.innerHTML = `<div class="explore-grid">${savedPosts.map(p => `
+          <div class="explore-tile" data-open-lightbox="${esc(p.id)}">
+            <img src="${esc(safeUrl(p.type === 'before_after' ? p.afterImageURL : p.imageURL))}" />
+          </div>
+        `).join('')}</div>`;
+      } else if (state.profileTab === 'status' && isOwn) {
+        const uploads = allUserPosts.filter(p => p.status !== 'approved');
+        if (!uploads.length) { body.innerHTML = '<div class="card empty-state"><span>✅</span><strong>All your uploads have been processed!</strong></div>'; return; }
+        body.innerHTML = `<div style="display:flex; flex-direction:column; gap:12px;">
+          ${uploads.map(p => `
+            <div class="card" style="padding:14px; display:flex; align-items:center; gap:14px;">
+              <img src="${esc(safeUrl(p.type === 'before_after' ? p.afterImageURL : p.imageURL))}" style="width:74px; height:74px; object-fit:cover; border-radius:12px;" />
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                  <span class="badge ${p.status === 'rejected' ? 'badge-rejected' : 'badge-pending'}">${esc(p.status.toUpperCase())}</span>
+                  <span style="font-size:0.75rem; color:var(--text-soft);">${esc(formatTime(p.createdAt))}</span>
+                </div>
+                <div style="font-size:0.86rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(p.caption)}</div>
+                ${p.status === 'rejected' ? `<div style="font-size:0.8rem; color:var(--danger); margin-top:4px;">Reason: ${esc(p.rejectionReason || 'Policy violation')}</div>` : ''}
+              </div>
+              <button class="btn btn-danger btn-sm" data-delete-post="${esc(p.id)}">Delete</button>
+            </div>
+          `).join('')}
+        </div>`;
+      }
+    }
+
+    async function toggleFollowUser(targetUid, btnEl = null) {
+      const myUid = state.authUser.uid;
+      if (targetUid === myUid) return;
+      if (btnEl) btnEl.disabled = true;
+      try {
+        const followRef = doc(db, 'follows', `${myUid}_${targetUid}`);
+        const reqRef = doc(db, 'followRequests', `${targetUid}_${myUid}`);
+        if (state.followingSet.has(targetUid)) {
+          await deleteDoc(followRef);
+          showToast('Unfollowed user', 'info');
+        } else {
+          const targetSnap = await getDoc(doc(db, 'users', targetUid));
+          if (!targetSnap.exists()) return;
+          const targetUser = targetSnap.data();
+          if (targetUser.isPrivate) {
+            const reqSnap = await getDoc(reqRef);
+            if (reqSnap.exists() && reqSnap.data().status === 'pending') {
+              await deleteDoc(reqRef);
+              showToast('Follow request cancelled', 'info');
+            } else {
+              await setDoc(reqRef, {
+                fromUid: myUid, fromUsername: state.userDoc.username,
+                fromPhoto: state.userDoc.photoURL || DEFAULT_AVATAR,
+                toUid: targetUid, status: 'pending', createdAt: serverTimestamp()
+              });
+              showToast('Follow request sent!', 'success');
+            }
+          } else {
+            await setDoc(followRef, { followerUid: myUid, targetUid, createdAt: serverTimestamp() });
+            showToast(`Now following @${targetUser.username}`, 'success');
+          }
+        }
+      } catch (err) { showToast(err.message, 'error'); } finally { if (btnEl) btnEl.disabled = false; }
+    }
+
+    document.addEventListener('click', async (e) => {
+      const acc = e.target.closest('[data-accept-req]');
+      if (acc) {
+        const myUid = state.authUser.uid;
+        try {
+          await setDoc(doc(db, 'follows', `${acc.dataset.fromUid}_${myUid}`), { followerUid: acc.dataset.fromUid, targetUid: myUid, createdAt: serverTimestamp() });
+          await updateDoc(doc(db, 'followRequests', acc.dataset.acceptReq), { status: 'accepted' });
+          showToast('Follow request accepted!', 'success');
+          if (state.currentView === 'profile') renderProfile(myUid);
+        } catch (err) { showToast(err.message, 'error'); }
+        return;
+      }
+      const rej = e.target.closest('[data-reject-req]');
+      if (rej) {
+        try {
+          await updateDoc(doc(db, 'followRequests', rej.dataset.rejectReq), { status: 'rejected' });
+          showToast('Follow request rejected.', 'info');
+          if (state.currentView === 'profile') renderProfile(state.authUser.uid);
+        } catch (err) { showToast(err.message, 'error'); }
+      }
+    });
+
+    async function openFollowListModal(targetUid, mode) {
+      $('list-modal-title').textContent = mode === 'followers' ? 'Followers' : 'Following';
+      const body = $('list-modal-body');
+      body.innerHTML = '<div class="skeleton" style="height:60px;"></div>';
+      openModal('list-modal');
+      const field = mode === 'followers' ? 'targetUid' : 'followerUid';
+      const pickField = mode === 'followers' ? 'followerUid' : 'targetUid';
+      const snap = await getDocs(query(collection(db, 'follows'), where(field, '==', targetUid), limit(50)));
+      const uids = snap.docs.map(d => d.data()[pickField]);
+      if (!uids.length) { body.innerHTML = `<div class="empty-state"><span>No ${mode} yet</span></div>`; return; }
+      const users = await Promise.all(uids.map(id => getDoc(doc(db, 'users', id))));
+      body.innerHTML = users.filter(s => s.exists()).map(s => {
+        const u = s.data();
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-radius:12px; background:var(--input-bg); cursor:pointer;" data-open-profile="${esc(u.uid)}" data-close-list="1">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${esc(safeUrl(u.photoURL, DEFAULT_AVATAR))}" class="avatar" />
+              <div><div style="font-weight:700; font-size:0.88rem;">${esc(u.displayName)}</div><div style="font-size:0.76rem; color:var(--text-soft);">@${esc(u.username)}</div></div>
+            </div>
+            <span class="btn btn-secondary btn-sm">View</span>
+          </div>`;
+      }).join('');
+    }
+    $('list-modal-body').addEventListener('click', (e) => { if (e.target.closest('[data-close-list]')) closeModal('list-modal'); });
+
+    function openEditProfileModal() {
+      const u = state.userDoc;
+      $('edit-display-name').value = u.displayName || '';
+      $('edit-username').value = u.username || '';
+      $('edit-bio').value = u.bio || '';
+      $('edit-is-private').checked = !!u.isPrivate;
+      openModal('edit-profile-modal');
+    }
+
+    $('edit-profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('edit-profile-save-btn'), uid = state.authUser.uid;
+      const newName = $('edit-display-name').value.trim(), newUsername = $('edit-username').value.trim().toLowerCase();
+      const newBio = $('edit-bio').value.trim(), isPrivate = $('edit-is-private').checked;
+      if (!/^[a-z0-9_.]{3,20}$/.test(newUsername)) { showToast('Invalid username format.', 'error'); return; }
+      btn.disabled = true;
+      try {
+        let photoURL = state.userDoc.photoURL, coverURL = state.userDoc.coverURL || '';
+        const avFile = $('edit-avatar-file').files[0], covFile = $('edit-cover-file').files[0];
+        if (avFile) { const err = validateFile(avFile, ['image/jpeg', 'image/png', 'image/webp'], 10); if (err) throw new Error(err); photoURL = (await uploadFileToStorage(`users/${uid}/avatar_${Date.now()}`, avFile)).url; }
+        if (covFile) { const err = validateFile(covFile, ['image/jpeg', 'image/png', 'image/webp'], 10); if (err) throw new Error(err); coverURL = (await uploadFileToStorage(`users/${uid}/cover_${Date.now()}`, covFile)).url; }
+        const oldUsername = state.userDoc.username;
+        await runTransaction(db, async (tx) => {
+          if (newUsername !== oldUsername) {
+            const newRef = doc(db, 'usernames', newUsername);
+            const check = await tx.get(newRef);
+            if (check.exists() && check.data().uid !== uid) throw new Error('Username already taken.');
+            tx.set(newRef, { uid });
+            if (oldUsername) tx.delete(doc(db, 'usernames', oldUsername));
+          }
+          tx.update(doc(db, 'users', uid), { displayName: newName, displayNameLower: newName.toLowerCase(), username: newUsername, bio: newBio, isPrivate, photoURL, coverURL, updatedAt: serverTimestamp() });
+        });
+        closeModal('edit-profile-modal');
+        showToast('Profile updated!', 'success');
+      } catch (err) { showToast(err.message, 'error'); } finally { btn.disabled = false; }
+    });
+
+    function openReportModal(targetUid) {
+      state.reportTarget = targetUid;
+      $('confirm-block-btn').textContent = state.blockedSet.has(targetUid) ? '✅ Unblock User' : '🚫 Block User';
+      openModal('report-modal');
+    }
+    $('confirm-block-btn').addEventListener('click', async () => {
+      if (!state.reportTarget) return;
+      const isBlocked = state.blockedSet.has(state.reportTarget);
+      try {
+        await updateDoc(doc(db, 'users', state.authUser.uid), { blockedUsers: isBlocked ? arrayRemove(state.reportTarget) : arrayUnion(state.reportTarget) });
+        closeModal('report-modal');
+        showToast(isBlocked ? 'User unblocked' : 'User blocked', 'info');
+        if (!isBlocked && state.currentView === 'messages') { state.activeConvId = null; $('chat-active-container').classList.add('hidden'); $('chat-empty-state').classList.remove('hidden'); }
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+    $('report-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await addDoc(collection(db, 'reports'), {
+          reporterUid: state.authUser.uid, targetUid: state.reportTarget, targetType: 'user', targetId: state.reportTarget,
+          reason: $('report-reason').value, details: $('report-details').value.trim(), createdAt: serverTimestamp()
+        });
+        $('report-form').reset(); closeModal('report-modal'); showToast('Report submitted to Admin.', 'success');
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // MESSAGING & OFFERS
+    document.querySelectorAll('[data-conv-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-conv-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.convTab = btn.dataset.convTab;
+        renderConversationsList();
+      });
+    });
+
+    $('chat-admin-btn').addEventListener('click', async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'users'), where('role', '==', 'admin'), limit(1)));
+        if (snap.empty) { showToast('No Admin account found yet. Set role="admin" on your Admin user in Firestore.', 'error'); return; }
+        await startOrOpenChat(snap.docs[0].data());
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function startOrOpenChat(peerUser) {
+      const myUid = state.authUser.uid;
+      if (peerUser.uid === myUid) return;
+      if (state.blockedSet.has(peerUser.uid)) { showToast('Unblock this user first.', 'error'); return; }
+
+      const convId = [myUid, peerUser.uid].sort().join('_');
+      const convRef = doc(db, 'conversations', convId);
+      const snap = await getDoc(convRef);
+      if (!snap.exists()) {
+        const isDirectActive = peerUser.role === 'admin' || state.followingSet.has(peerUser.uid) || !peerUser.isPrivate;
+        await setDoc(convRef, {
+          participants: [myUid, peerUser.uid],
+          participantData: {
+            [myUid]: { displayName: state.userDoc.displayName, username: state.userDoc.username, photoURL: state.userDoc.photoURL || DEFAULT_AVATAR, isAdmin: state.userDoc.role === 'admin' },
+            [peerUser.uid]: { displayName: peerUser.displayName, username: peerUser.username, photoURL: peerUser.photoURL || DEFAULT_AVATAR, isAdmin: peerUser.role === 'admin' }
+          },
+          status: isDirectActive ? 'active' : 'request',
+          requestedBy: myUid, lastMessage: '', lastMessageType: 'text', lastMessageAt: serverTimestamp(),
+          unreadCounts: { [myUid]: 0, [peerUser.uid]: 0 }
+        });
+      }
+      switchView('messages');
+      openConversation(convId);
+    }
+
+    function updateUnreadBadges() {
+      const uid = state.authUser?.uid;
+      if (!uid) return;
+      const totalUnread = state.conversations.reduce((acc, c) => acc + (c.unreadCounts?.[uid] || 0), 0);
+      ['side-msg-badge', 'bot-msg-badge'].forEach(id => {
+        const el = $(id);
+        el.textContent = totalUnread > 99 ? '99+' : totalUnread;
+        el.classList.toggle('hidden', totalUnread === 0);
+      });
+    }
+
+    function renderConversationsList() {
+      const uid = state.authUser?.uid;
+      if (!uid) return;
+      const reqCount = state.conversations.filter(c => c.status === 'request' && c.requestedBy !== uid).length;
+      $('req-count-pill').textContent = reqCount > 0 ? `(${reqCount})` : '';
+      const filtered = state.conversations.filter(c => {
+        const peerUid = (c.participants || []).find(p => p !== uid);
+        if (state.blockedSet.has(peerUid)) return false;
+        if (state.convTab === 'requests') return c.status === 'request' && c.requestedBy !== uid;
+        return c.status === 'active' || (c.status === 'request' && c.requestedBy === uid);
+      });
+      const listEl = $('conv-list');
+      if (!filtered.length) { listEl.innerHTML = `<div class="empty-state"><span>💬</span><span style="font-size:0.84rem;">No ${state.convTab} conversations</span></div>`; return; }
+
+      listEl.innerHTML = filtered.map(c => {
+        const peerUid = (c.participants || []).find(p => p !== uid);
+        const peer = c.participantData?.[peerUid] || { displayName: 'Creator', username: 'user', photoURL: DEFAULT_AVATAR };
+        const unread = c.unreadCounts?.[uid] || 0;
+        return `
+          <div class="conv-item ${state.activeConvId === c.id ? 'active' : ''}" data-open-conv="${esc(c.id)}">
+            <img src="${esc(safeUrl(peer.photoURL, DEFAULT_AVATAR))}" class="avatar" />
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(peer.displayName)} ${peer.isAdmin ? '<span class="badge badge-pro">ADMIN</span>' : ''}</strong>
+                ${unread > 0 ? `<span class="badge badge-primary">${unread}</span>` : ''}
+              </div>
+              <div style="font-size:0.78rem; color:var(--text-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(c.lastMessage || 'Start chatting...')}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    $('conv-list').addEventListener('click', (e) => { const item = e.target.closest('[data-open-conv]'); if (item) openConversation(item.dataset.openConv); });
+    $('chat-back-btn').addEventListener('click', () => { $('chat-window-panel').classList.add('chat-mobile-hidden'); $('conv-list-panel').classList.remove('chat-mobile-hidden'); });
+
+    async function openConversation(convId) {
+      state.activeConvId = convId; state.replyingToMsg = null; $('chat-reply-bar').classList.add('hidden');
+      renderConversationsList();
+      $('conv-list-panel').classList.add('chat-mobile-hidden');
+      $('chat-window-panel').classList.remove('chat-mobile-hidden');
+      $('chat-empty-state').classList.add('hidden');
+      $('chat-active-container').classList.remove('hidden');
+
+      const uid = state.authUser.uid;
+      const convSnap = await getDoc(doc(db, 'conversations', convId));
+      if (!convSnap.exists()) return;
+      const conv = convSnap.data();
+      if ((conv.unreadCounts?.[uid] || 0) > 0) updateDoc(doc(db, 'conversations', convId), { [`unreadCounts.${uid}`]: 0 }).catch(() => {});
+
+      const peerUid = conv.participants.find(p => p !== uid);
+      const peerSnap = await getDoc(doc(db, 'users', peerUid));
+      const peer = peerSnap.exists() ? peerSnap.data() : (conv.participantData?.[peerUid] || {});
+
+      $('chat-peer-avatar').src = safeUrl(peer.photoURL, DEFAULT_AVATAR);
+      $('chat-peer-name').textContent = `${peer.displayName || 'Creator'}${peer.role === 'admin' ? ' (Admin)' : ''}`;
+      $('chat-peer-online').classList.toggle('hidden', !peer.isOnline);
+      $('chat-peer-status').textContent = peer.isOnline ? 'Online' : (peer.lastSeen ? `Last seen ${formatTime(peer.lastSeen)}` : `@${peer.username || 'user'}`);
+      $('chat-view-profile-btn').onclick = () => switchView('profile', peerUid);
+      $('chat-block-btn').onclick = () => openReportModal(peerUid);
+
+      const isIncomingReq = conv.status === 'request' && conv.requestedBy !== uid;
+      $('chat-request-banner').classList.toggle('hidden', !isIncomingReq);
+      $('accept-msg-req-btn').onclick = async () => { await updateDoc(doc(db, 'conversations', convId), { status: 'active' }); $('chat-request-banner').classList.add('hidden'); showToast('Message request accepted', 'success'); };
+      $('decline-msg-req-btn').onclick = async () => { await deleteDoc(doc(db, 'conversations', convId)); state.activeConvId = null; $('chat-active-container').classList.add('hidden'); $('chat-empty-state').classList.remove('hidden'); };
+
+      if (state.chatUnsub) state.chatUnsub();
+      state.chatUnsub = onSnapshot(
+        query(collection(db, 'conversations', convId, 'messages'), orderBy('createdAt', 'asc'), limit(100)),
+        (snap) => renderChatMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })), peer)
+      );
+    }
+
+    function renderChatMessages(messages, peer) {
+      const uid = state.authUser.uid, box = $('chat-messages-list');
+      if (!messages.length) { box.innerHTML = '<div class="empty-state"><span>👋</span><span>Say hello! Free plan includes 150 words/day across all chats.</span></div>'; return; }
+
+      box.innerHTML = messages.map(m => {
+        if (m.type === 'system') return `<div class="msg-row system"><div class="msg-system-pill">${esc(m.text)}</div></div>`;
+        const isMe = m.senderUid === uid;
+        if (m.type === 'payment_offer' && m.offerData) {
+          const o = m.offerData;
+          const isExpired = o.expiryDate && new Date(o.expiryDate) < new Date();
+          const status = o.status === 'paid' ? 'paid' : isExpired ? 'expired' : 'pending';
+          return `
+            <div class="msg-row ${isMe ? 'me' : 'them'}">
+              <div class="offer-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span class="badge badge-pro">⚡ SERVICE OFFER</span>
+                  <span class="badge ${status === 'paid' ? 'badge-approved' : status === 'expired' ? 'badge-rejected' : 'badge-pending'}">${status.toUpperCase()}</span>
+                </div>
+                <div style="font-weight:800; font-size:1.05rem;">${esc(o.serviceName)}</div>
+                <p style="font-size:0.82rem; color:var(--text-muted); margin:6px 0;">${esc(o.description)}</p>
+                <div class="offer-price">₹${esc(o.price)}</div>
+                <div style="font-size:0.78rem; color:var(--text-muted); display:flex; flex-direction:column; gap:3px; margin-bottom:12px;">
+                  <span>⏱️ Delivery: <b>${esc(o.deliveryTime)}</b></span>
+                  <span>📅 Expires: <b>${esc(o.expiryDate || 'N/A')}</b></span>
+                </div>
+                ${status === 'pending' && !isMe
+                  ? `<button class="btn btn-primary" style="width:100%;" data-pay-offer="${esc(m.id)}" data-offer-id="${esc(o.offerId || m.id)}">Pay Now ₹${esc(o.price)}</button>`
+                  : status === 'paid'
+                    ? `<button class="btn btn-secondary" style="width:100%;" data-open-order-form="${esc(o.orderId || '')}">🎬 Video Order Details</button>`
+                    : `<button class="btn btn-secondary" disabled style="width:100%;">Offer Expired</button>`
+                }
+              </div>
+              <div class="msg-meta">${esc(formatTime(m.createdAt))}</div>
+            </div>
+          `;
+        }
+        const replyHTML = m.replyTo ? `<div class="msg-reply-quote"><strong>${esc(m.replyTo.senderName)}</strong><div>${esc(m.replyTo.text)}</div></div>` : '';
+        const mediaHTML = m.imageURL ? `<img src="${esc(safeUrl(m.imageURL))}" style="max-width:240px; border-radius:10px; margin-bottom:${m.text ? '6px' : '0'};" />` : '';
+        return `
+          <div class="msg-row ${isMe ? 'me' : 'them'}">
+            <div class="msg-bubble">${replyHTML}${mediaHTML}${m.text ? `<div>${esc(m.text)}</div>` : ''}</div>
+            <div class="msg-meta">
+              <span>${esc(formatTime(m.createdAt))}</span>
+              <button type="button" style="color:var(--cyan); font-size:0.7rem; font-weight:700;" data-reply-msg="${esc(m.id)}" data-reply-txt="${esc(m.text || '📷 Photo')}" data-reply-sender="${esc(isMe ? 'You' : (peer.displayName || 'Creator'))}">Reply</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    $('chat-messages-list').addEventListener('click', (e) => {
+      const replyBtn = e.target.closest('[data-reply-msg]');
+      if (replyBtn) {
+        state.replyingToMsg = { msgId: replyBtn.dataset.replyMsg, text: replyBtn.dataset.replyTxt, senderName: replyBtn.dataset.replySender };
+        $('chat-reply-author').textContent = state.replyingToMsg.senderName;
+        $('chat-reply-text').textContent = state.replyingToMsg.text;
+        $('chat-reply-bar').classList.remove('hidden');
+        $('chat-msg-input').focus();
+        return;
+      }
+      const payBtn = e.target.closest('[data-pay-offer]');
+      if (payBtn) { initiateRazorpayPayment({ purchaseType: 'service_offer', convId: state.activeConvId, msgId: payBtn.dataset.payOffer, offerId: payBtn.dataset.offerId }, payBtn); return; }
+      const orderBtn = e.target.closest('[data-open-order-form]');
+      if (orderBtn) openOrderOrNavigate(orderBtn.dataset.openOrderForm);
+    });
+
+    $('chat-reply-cancel').addEventListener('click', () => { state.replyingToMsg = null; $('chat-reply-bar').classList.add('hidden'); });
+    $('chat-msg-input').addEventListener('input', (e) => { $('chat-draft-words').textContent = `${countWords(e.target.value)}w`; });
+
+    $('chat-send-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!state.activeConvId) return;
+      const text = $('chat-msg-input').value.trim();
+      if (!text) return;
+      const btn = $('chat-send-btn');
+      btn.disabled = true;
+      try {
+        await fnSendChatMessage({ convId: state.activeConvId, type: 'text', text, imageURL: null, replyTo: state.replyingToMsg });
+        $('chat-msg-input').value = '';
+        $('chat-draft-words').textContent = '0w';
+        state.replyingToMsg = null;
+        $('chat-reply-bar').classList.add('hidden');
+      } catch (err) {
+        const msg = err.message || 'Unable to send message.';
+        if (err.code === 'functions/resource-exhausted' || msg.toLowerCase().includes('limit')) {
+          showToast('Daily word limit reached! Upgrade to PRO to continue.', 'error');
+        } else {
+          showToast(`Server check required: ${msg}`, 'error');
+        }
+      } finally { btn.disabled = false; }
+    });
+
+    $('chat-img-input').addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if (!f || !state.activeConvId) return;
+      const err = validateFile(f, ['image/jpeg', 'image/png', 'image/webp'], 10);
+      if (err) { showToast(err, 'error'); e.target.value = ''; return; }
+      try {
+        showToast('Uploading attachment...', 'info');
+        const up = await uploadFileToStorage(`chats/${state.activeConvId}/${Date.now()}_${state.authUser.uid}`, f);
+        await fnSendChatMessage({ convId: state.activeConvId, type: 'image', text: '', imageURL: up.url, replyTo: state.replyingToMsg });
+        state.replyingToMsg = null; $('chat-reply-bar').classList.add('hidden');
+      } catch (err2) { showToast(err2.message, 'error'); } finally { e.target.value = ''; }
+    });
+
+    // RAZORPAY PAYMENT
+    async function initiateRazorpayPayment(payload, triggerBtn = null) {
+      if (typeof Razorpay === 'undefined') { showToast('Razorpay SDK failed to load.', 'error'); return; }
+      if (triggerBtn) triggerBtn.disabled = true;
+      try {
+        showToast('Creating secure payment order...', 'info');
+        const res = await fnCreateRazorpayOrder(payload);
+        const orderInfo = res.data;
+        const rzp = new Razorpay({
+          key: orderInfo.keyId,
+          amount: orderInfo.amount,
+          currency: orderInfo.currency || 'INR',
+          name: 'CREATOR CONNECT',
+          description: orderInfo.description || 'Creator Service / PRO Plan',
+          order_id: orderInfo.razorpayOrderId,
+          prefill: { name: state.userDoc.displayName, email: state.userDoc.email || state.authUser.email || '' },
+          theme: { color: '#8b5cf6' },
+          handler: async function (response) {
+            showToast('Verifying payment signature with server...', 'info');
+            try {
+              const verifyRes = await fnVerifyRazorpayPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              });
+              if (verifyRes.data?.verified) {
+                showToast('Payment Verified Successfully!', 'success');
+                if (payload.purchaseType === 'service_offer' && verifyRes.data.orderId) openVideoOrderForm(verifyRes.data.orderId);
+                else if (payload.purchaseType === 'membership') loadPlans();
+              } else showToast('Payment awaiting server webhook confirmation.', 'info');
+            } catch (verErr) { showToast(`Verification error: ${verErr.message}`, 'error'); }
+          },
+          modal: { ondismiss: () => showToast('Payment cancelled.', 'info') }
+        });
+        rzp.on('payment.failed', (resp) => showToast(resp.error?.description || 'Payment failed.', 'error'));
+        rzp.open();
+      } catch (err) { showToast(err.message || 'Could not start Razorpay Checkout.', 'error'); } finally { if (triggerBtn) triggerBtn.disabled = false; }
+    }
+
+    // VIDEO ORDERS
+    async function openOrderOrNavigate(orderId) {
+      if (!orderId) { switchView('orders'); return; }
+      const snap = await getDoc(doc(db, 'orders', orderId));
+      if (snap.exists() && snap.data().orderStatus === 'Payment Successful') openVideoOrderForm(orderId);
+      else switchView('orders');
+    }
+    function openVideoOrderForm(orderId) { $('order-req-id').value = orderId; openModal('order-form-modal'); }
+
+    $('video-order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('vo-submit-btn'), orderId = $('order-req-id').value;
+      const refVideoFile = $('vo-ref-video').files[0], refImageFile = $('vo-ref-image').files[0];
+      if (refVideoFile) { const errV = validateFile(refVideoFile, ['video/mp4', 'video/quicktime', 'video/webm'], 50); if (errV) { showToast(errV, 'error'); return; } }
+      if (refImageFile) { const errI = validateFile(refImageFile, ['image/jpeg', 'image/png', 'image/webp'], 10); if (errI) { showToast(errI, 'error'); return; } }
+
+      btn.disabled = true; btn.textContent = 'Uploading & Submitting...';
+      try {
+        let referenceVideoURL = '', referenceImageURL = '';
+        if (refVideoFile) referenceVideoURL = (await uploadFileToStorage(`orders/${orderId}/ref_video_${Date.now()}`, refVideoFile)).url;
+        if (refImageFile) referenceImageURL = (await uploadFileToStorage(`orders/${orderId}/ref_image_${Date.now()}`, refImageFile)).url;
+        await fnSubmitVideoOrder({
+          orderId,
+          videoRequest: {
+            topic: $('vo-topic').value.trim(), videoType: $('vo-type').value, duration: $('vo-duration').value.trim(),
+            typographyStyle: $('vo-typography').value.trim(), voiceOver: $('vo-voiceover').value.trim(),
+            backgroundMusic: $('vo-music').value.trim(), referenceVideoURL, referenceImageURL,
+            instructions: $('vo-instructions').value.trim()
+          }
+        });
+        $('video-order-form').reset(); closeModal('order-form-modal');
+        showToast('Video Order Request submitted to Admin!', 'success'); switchView('orders');
+      } catch (err) { showToast(err.message, 'error'); } finally { btn.disabled = false; btn.textContent = 'Submit Video Request to Admin'; }
+    });
+
+    async function loadOrders() {
+      const list = $('orders-list');
+      list.innerHTML = '<div class="skeleton" style="height:160px;"></div>';
+      try {
+        const snap = await safeQueryDocs(
+          query(collection(db, 'orders'), where('userUid', '==', state.authUser.uid), orderBy('createdAt', 'desc')),
+          query(collection(db, 'orders'), where('userUid', '==', state.authUser.uid))
+        );
+        if (snap.empty) {
+          list.innerHTML = `<div class="card empty-state"><span style="font-size:2.2rem;">🎬</span><strong>No Video Orders Yet</strong><p style="font-size:0.85rem;">Chat with Admin Support to receive a service offer.</p><button class="btn btn-primary btn-sm" data-nav="messages">Go to Messages</button></div>`;
+          return;
+        }
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsMillis(b.createdAt) - tsMillis(a.createdAt));
+        list.innerHTML = docs.map(o => {
+          const idx = ORDER_STATUSES.indexOf(o.orderStatus);
+          const needsForm = o.paymentStatus === 'paid' && o.orderStatus === 'Payment Successful';
+          return `
+            <div class="card" style="padding:20px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                <div><div style="font-weight:800; font-size:1.05rem;">${esc(o.serviceName || 'Video Service Order')}</div><div style="font-size:0.8rem; color:var(--text-soft);">Order #${esc(o.id.slice(0, 8))} • ₹${esc(o.amount)} • ${esc(formatTime(o.createdAt))}</div></div>
+                <span class="badge ${o.orderStatus === 'Cancelled / Refund Pending' ? 'badge-rejected' : o.orderStatus === 'Delivered' ? 'badge-approved' : 'badge-primary'}">${esc(o.orderStatus)}</span>
+              </div>
+              ${needsForm ? `<div style="margin-top:14px; padding:12px; border-radius:12px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;"><span style="font-size:0.84rem; font-weight:700; color:var(--success);">Payment verified! Submit your video instructions.</span><button class="btn btn-primary btn-sm" data-fill-order="${esc(o.id)}">Fill Order Form</button></div>` : ''}
+              ${o.videoRequest ? `<div style="margin-top:12px; padding:12px; background:var(--input-bg); border-radius:12px; font-size:0.84rem; display:grid; gap:4px;"><div><b>Topic:</b> ${esc(o.videoRequest.topic)} (${esc(o.videoRequest.videoType)} • ${esc(o.videoRequest.duration)})</div><div><b>Typography:</b> ${esc(o.videoRequest.typographyStyle)} | <b>Voice Over:</b> ${esc(o.videoRequest.voiceOver)}</div><div><b>Music:</b> ${esc(o.videoRequest.backgroundMusic)}</div><div><b>Instructions:</b> ${esc(o.videoRequest.instructions)}</div></div>` : ''}
+              <div class="timeline">${ORDER_STATUSES.map((st, sIdx) => (st === 'Cancelled / Refund Pending' && o.orderStatus !== st) ? '' : `<div class="timeline-step ${sIdx < idx ? 'done' : sIdx === idx ? 'current' : ''}"><span class="timeline-dot"></span><span>${esc(st)}</span></div>`).join('')}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) { list.innerHTML = `<div class="card empty-state">${esc(err.message)}</div>`; }
+    }
+    $('orders-list').addEventListener('click', (e) => { const btn = e.target.closest('[data-fill-order]'); if (btn) openVideoOrderForm(btn.dataset.fillOrder); });
+
+    // MEMBERSHIP PLANS
+    function renderMembershipBanner() {
+      const u = state.userDoc, banner = $('my-membership-banner');
+      if (!u) return;
+      const isProActive = u.isPro && (!u.proExpiresAt || tsMillis(u.proExpiresAt) > Date.now());
+      const exp = u.proExpiresAt ? formatTime(u.proExpiresAt) : '';
+      banner.innerHTML = isProActive
+        ? `<div><div style="display:flex; align-items:center; gap:8px;"><span class="badge badge-pro">👑 PRO ACTIVE</span><strong>${esc(u.proPlanName || 'PRO Membership')}</strong></div><div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">Daily Word Limit: <b>${u.dailyWordLimit === -1 ? 'Unlimited' : u.dailyWordLimit}</b> • Expires: <b>${esc(exp || 'Active')}</b></div></div><span class="badge badge-approved">Server Verified</span>`
+        : `<div><div style="font-weight:800;">Current Plan: Free Tier (150 Words / Day)</div><div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">Upgrade to unlock higher daily word limits and the PRO Creator badge.</div></div>`;
+    }
+
+    async function loadPlans() {
+      renderMembershipBanner();
+      const grid = $('plans-grid');
+      grid.innerHTML = Array(2).fill('<div class="card skeleton" style="height:260px;"></div>').join('');
+      try {
+        const snap = await safeQueryDocs(
+          query(collection(db, 'membershipPlans'), where('isActive', '==', true), orderBy('sortOrder', 'asc')),
+          query(collection(db, 'membershipPlans'), where('isActive', '==', true))
+        );
+        if (snap.empty) { grid.innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><span>👑</span><strong>No active membership plans published by Admin yet.</strong></div>'; return; }
+        const plans = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        grid.innerHTML = plans.map(p => `
+          <div class="card plan-card ${p.isFeatured ? 'featured' : ''}">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span class="badge badge-pro">${esc(p.badgeText || '👑 PRO')}</span>
+                <span style="font-size:0.78rem; color:var(--text-soft); font-weight:700;">${esc(p.validityDays)} Days Validity</span>
+              </div>
+              <h3 style="font-size:1.25rem; font-weight:800;">${esc(p.name)}</h3>
+              <div style="display:flex; align-items:baseline; gap:10px; margin:12px 0;">
+                <span style="font-size:1.8rem; font-weight:800;">₹${esc(p.offerPrice)}</span>
+                ${p.originalPrice > p.offerPrice ? `<span style="text-decoration:line-through; color:var(--text-soft);">₹${esc(p.originalPrice)}</span>` : ''}
+              </div>
+              <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">${esc(p.description)}</p>
+              <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; margin-bottom:20px; font-size:0.85rem;">
+                ${(p.features || []).map(f => `<li>✅ ${esc(f)}</li>`).join('')}
+              </ul>
+            </div>
+            <button class="btn btn-gold" data-buy-plan="${esc(p.id)}" style="width:100%;">Purchase Plan ₹${esc(p.offerPrice)}</button>
+          </div>
+        `).join('');
+      } catch (err) { grid.innerHTML = `<div class="card empty-state" style="grid-column:1/-1;">${esc(err.message)}</div>`; }
+    }
+    $('plans-grid').addEventListener('click', (e) => { const btn = e.target.closest('[data-buy-plan]'); if (btn) initiateRazorpayPayment({ purchaseType: 'membership', planId: btn.dataset.buyPlan }, btn); });
+
+    // NOTIFICATIONS
+    $('notif-open-btn').addEventListener('click', () => $('notif-drawer').classList.remove('hidden'));
+    $('notif-close-btn').addEventListener('click', () => $('notif-drawer').classList.add('hidden'));
+
+    function renderNotifications(items) {
+      const unreadCount = items.filter(n => !n.isRead && n.recipientUid !== 'ALL').length;
+      const badge = $('notif-badge');
+      badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+      badge.classList.toggle('hidden', unreadCount === 0);
+      const list = $('notif-list');
+      if (!items.length) { list.innerHTML = '<div class="empty-state"><span>🔔</span><span>No notifications yet</span></div>'; return; }
+      list.innerHTML = items.map(n => `
+        <div class="card" style="padding:12px; border-left:${n.isRead ? '1px solid var(--border)' : '3px solid var(--primary)'}; cursor:pointer;" data-notif-id="${esc(n.id)}" data-notif-type="${esc(n.type)}" data-notif-ref="${esc(n.refId || '')}">
+          <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:4px;"><strong style="font-size:0.86rem;">${esc(n.title)}</strong><span style="font-size:0.72rem; color:var(--text-soft);">${esc(formatTime(n.createdAt))}</span></div>
+          <p style="font-size:0.82rem; color:var(--text-muted);">${esc(n.body)}</p>
+        </div>
+      `).join('');
+    }
+
+    $('notif-list').addEventListener('click', async (e) => {
+      const card = e.target.closest('[data-notif-id]');
+      if (!card) return;
+      updateDoc(doc(db, 'notifications', card.dataset.notifId), { isRead: true }).catch(() => {});
+      $('notif-drawer').classList.add('hidden');
+      const type = card.dataset.notifType, refId = card.dataset.notifRef;
+      if (type === 'new_message') { switchView('messages'); if (refId) openConversation(refId); }
+      else if (type === 'follow_request' || type === 'follow_accepted') switchView('profile', state.authUser.uid);
+      else if (type === 'photo_approved' || type === 'photo_rejected') { state.profileTab = type === 'photo_approved' ? 'posts' : 'status'; switchView('profile', state.authUser.uid); }
+      else if (type === 'payment_successful' || type === 'order_accepted' || type === 'order_completed') switchView('orders');
+      else if (type === 'membership_expiry') switchView('plans');
+    });
+
+    $('mark-all-read-btn').addEventListener('click', async () => {
+      const snap = await getDocs(query(collection(db, 'notifications'), where('recipientUid', '==', state.authUser.uid), where('isRead', '==', false)));
+      await Promise.all(snap.docs.map(d => updateDoc(d.ref, { isRead: true })));
+      showToast('All notifications marked read', 'info');
+    });
+  </script>
+</body>
+</html>
