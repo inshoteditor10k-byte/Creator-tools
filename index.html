@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Creator Connect</title>
+<style>
+:root{--bg:#0b0b12;--card:#161622;--tx:#f3f3f8;--mut:#8b8ba3;--ac:#8b5cf6;--ac2:#ec4899;--bd:#26263a;--ok:#22c55e;--er:#ef4444}
+:root[data-t=light]{--bg:#f5f5fa;--card:#fff;--tx:#14141f;--mut:#6b6b80;--bd:#e4e4ee}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;max-width:560px;margin:auto;min-height:100vh;padding-bottom:76px}
+header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--bd)}
+.logo{font-weight:800;font-size:20px;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.btn{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;padding:10px 18px;border-radius:12px;font-weight:600}
+.btn.g{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.btn.s{padding:6px 12px;font-size:13px}
+input,textarea,select{width:100%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:11px;font:inherit;margin:6px 0}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;background:var(--card);border-top:1px solid var(--bd);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:5}
+nav button{flex:1;font-size:21px;opacity:.5;position:relative}nav button.on{opacity:1}
+nav small{display:block;font-size:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;margin:12px;overflow:hidden}
+.pad{padding:12px}.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}
+.av{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
+.av.l{width:84px;height:84px}
+.post img.ph{width:100%;max-height:560px;object-fit:cover;display:block}
+.mut{color:var(--mut);font-size:13px}.tag{color:var(--ac)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.grid img{width:100%;aspect-ratio:1;object-fit:cover;cursor:pointer}
+.badge{background:var(--er);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;position:absolute;top:-4px;margin-left:-6px}
+.pro{background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;border-radius:6px;font-size:10px;padding:2px 6px;font-weight:700}
+.msgs{display:flex;flex-direction:column;gap:6px;padding:12px;min-height:60vh}
+.m{max-width:78%;padding:9px 12px;border-radius:16px;background:var(--card);border:1px solid var(--bd);word-wrap:break-word}
+.m.me{align-self:flex-end;background:linear-gradient(90deg,var(--ac),var(--ac2));color:#fff;border:0}
+.m img{max-width:100%;border-radius:10px}.m .rp{font-size:12px;opacity:.7;border-left:3px solid #fff7;padding-left:6px;margin-bottom:4px}
+.sk{height:300px;margin:12px;border-radius:16px;background:linear-gradient(90deg,var(--card),var(--bd),var(--card));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;gap:6px}
+#toast div{background:var(--card);border:1px solid var(--bd);padding:10px 16px;border-radius:12px;animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(-8px)}}
+.empty{text-align:center;color:var(--mut);padding:50px 20px}
+.welcome{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px;gap:16px;background:radial-gradient(circle at 50% 0,#8b5cf633,transparent 60%)}
+.chatbar{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);width:100%;max-width:560px;background:var(--bg);padding:8px 12px;border-top:1px solid var(--bd);z-index:4}
+.chatbar .row input{margin:0}
+.x{color:var(--er)}
+</style></head><body>
+<div id="toast"></div><div id="app"></div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signInWithPopup,GoogleAuthProvider,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,updateDoc,deleteDoc,addDoc,collection,query,where,orderBy,limit,startAfter,getDocs,getCountFromServer,onSnapshot,writeBatch,increment,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getStorage,ref,uploadBytes,getDownloadURL,deleteObject}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+const app=initializeApp({apiKey:"AIzaSyDNmvJiJtM3VcHzFNGRHTYfrNn2TcGGDzk",authDomain:"ytcr-7b883.firebaseapp.com",projectId:"ytcr-7b883",storageBucket:"ytcr-7b883.firebasestorage.app",messagingSenderId:"1002788979175",appId:"1:1002788979175:web:92fb36779a67d155adbd42"});
+const auth=getAuth(app),db=getFirestore(app),st=getStorage(app);
+const $=s=>document.querySelector(s),A=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const d=document.createElement('div');d.textContent=m;$('#toast').append(d);setTimeout(()=>d.remove(),3200)};
+const DEF='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#8b5cf6"/><circle cx="20" cy="15" r="7" fill="#fff"/><rect x="8" y="25" width="24" height="15" rx="8" fill="#fff"/></svg>');
+const LIMIT=150,today=()=>new Date().toISOString().slice(0,10).replace(/-/g,'');
+const words=t=>(t.trim().match(/\S+/g)||[]).length;
+let me=null,prof=null,view='home',unsubs=[],theme=localStorage.getItem('t')||'dark',lastDoc=null;
+document.documentElement.dataset.t=theme;
+const clear=()=>{unsubs.forEach(u=>u());unsubs=[]};
+const uref=id=>doc(db,'users',id);
+const getU=async id=>{const s=await getDoc(uref(id));return s.exists()?{id,...s.data()}:{id,username:'user',displayName:'User'}};
+const ts=t=>t?.toDate?t.toDate().toLocaleString('hi-IN',{dateStyle:'medium',timeStyle:'short'}):'';
+const notify=(to,type,text)=>to!==me.uid&&addDoc(collection(db,'users',to,'notifications'),{type,text,from:me.uid,read:false,createdAt:serverTimestamp()}).catch(()=>{});
+/* ---------- AUTH ---------- */
+onAuthStateChanged(auth,async u=>{
+ clear();me=u;
+ if(!u){prof=null;return welcome()}
+ const s=await getDoc(uref(u.uid));
+ if(!s.exists())return setup();
+ prof={id:u.uid,...s.data()};
+ updateDoc(uref(u.uid),{online:true,lastSeen:serverTimestamp()}).catch(()=>{});
+ shell();go('home');
+});
+addEventListener('visibilitychange',()=>me&&prof&&updateDoc(uref(me.uid),{online:!document.hidden,lastSeen:serverTimestamp()}).catch(()=>{}));
+function welcome(){A.innerHTML=`<div class="welcome"><div class="logo" style="font-size:38px">Creator Connect</div><p class="mut">Creators के लिए Premium Social Network.<br>अपना काम दिखाएँ, जुड़ें और बढ़ें।</p><button class="btn" id="g">🔐 Continue with Google</button></div>`;
+ $('#g').onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>toast('Login असफल: '+e.code))}
+function setup(){A.innerHTML=`<div class="pad"><h2>Profile Setup</h2><p class="mut">अपनी पहचान बनाइए</p>
+<div class="row" style="margin:14px 0"><img class="av l" id="pv" src="${esc(me.photoURL||DEF)}"><input type="file" id="pf" accept="image/jpeg,image/png,image/webp"></div>
+<input id="dn" placeholder="Display Name" maxlength="40" value="${esc(me.displayName||'')}">
+<input id="un" placeholder="username (a-z, 0-9, _ , 3-20)" maxlength="20">
+<textarea id="bio" rows="3" maxlength="150" placeholder="Bio"></textarea>
+<button class="btn" id="sv" style="width:100%">Save & Continue</button><button class="btn g" id="lo" style="width:100%;margin-top:8px">Logout</button></div>`;
+ $('#lo').onclick=()=>signOut(auth);
+ $('#sv').onclick=async()=>{
+  const dn=$('#dn').value.trim(),un=$('#un').value.trim().toLowerCase(),bio=$('#bio').value.trim();
+  if(!dn)return toast('नाम लिखें');
+  if(!/^[a-z0-9_]{3,20}$/.test(un))return toast('Username: 3-20 अक्षर, a-z 0-9 _');
+  $('#sv').disabled=true;
+  try{
+   const f=$('#pf').files[0];let photo=me.photoURL||'';
+   if(f){photo=await upload(f,`avatars/${me.uid}/${Date.now()}`)}
+   const b=writeBatch(db);
+   b.set(doc(db,'usernames',un),{uid:me.uid});
+   b.set(uref(me.uid),{displayName:dn,username:un,bio,photoURL:photo,coverURL:'',isPrivate:false,pro:false,online:true,createdAt:serverTimestamp()});
+   await b.commit();location.reload();
+  }catch(e){toast(e.code==='permission-denied'?'यह Username पहले से लिया जा चुका है':'Error: '+e.message);$('#sv').disabled=false}}}
+async function upload(f,path){
+ if(!['image/jpeg','image/png','image/webp'].includes(f.type))throw Error('केवल JPG/PNG/WEBP');
+ if(f.size>5*1024*1024)throw Error('फाइल 5MB से छोटी हो');
+ const r=ref(st,path);await uploadBytes(r,f);return getDownloadURL(r)}
+/* ---------- SHELL ---------- */
+function shell(){
+ A.innerHTML=`<header><span class="logo">Creator Connect</span><div class="row"><button id="th">🌓</button><button id="bell">🔔<span class="badge" id="nb" hidden></span></button></div></header><main id="v"></main>
+ <nav>${[['home','🏠','Home'],['explore','🔍','Explore'],['create','➕','Create'],['msgs','💬','Chats'],['profile','👤','Profile']].map(([k,i,l])=>`<button data-k="${k}">${i}<small>${l}</small></button>`).join('')}</nav>`;
+ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.k));
+ $('#th').onclick=()=>{theme=theme==='dark'?'light':'dark';localStorage.setItem('t',theme);document.documentElement.dataset.t=theme};
+ $('#bell').onclick=()=>go('notif');
+ onSnapshot(query(collection(db,'users',me.uid,'notifications'),where('read','==',false)),s=>{const n=$('#nb');if(n){n.hidden=!s.size;n.textContent=s.size}});
+}
+function go(v,arg){clear();view=v;lastDoc=null;
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===v||(v==='chat'&&b.dataset.k==='msgs')||(v==='user'&&arg===me.uid&&b.dataset.k==='profile')));
+ const m=$('#v');m.innerHTML='<div class="sk"></div><div class="sk"></div>';scrollTo(0,0);
+ ({home:()=>feed(m,false),explore:()=>feed(m,true),create:()=>create(m),msgs:()=>chats(m),chat:()=>chat(m,arg),profile:()=>userPage(m,me.uid),user:()=>userPage(m,arg),notif:()=>notifs(m),users:()=>explore2(m)})[v]()}
+/* ---------- FEED ---------- */
+async function feed(m,trend){
+ m.innerHTML=trend?`<div class="pad"><input id="sq" placeholder="🔍 Username खोजें"><div id="sr"></div></div><h3 class="pad">🔥 Trending</h3><div id="fl"></div>`:`<div id="fl"></div>`;
+ if(trend)$('#sq').oninput=async e=>{const q=e.target.value.trim().toLowerCase();if(q.length<2)return $('#sr').innerHTML='';
+  const s=await getDocs(query(collection(db,'users'),where('username','>=',q),where('username','<=',q+'\uf8ff'),limit(8)));
+  $('#sr').innerHTML=s.docs.map(d=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${d.id}"><img class="av" src="${esc(d.data().photoURL||DEF)}"><b>@${esc(d.data().username)}</b></div>`).join('')||'<p class="mut">कोई नहीं मिला</p>';
+  $('#sr').querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('user',e.dataset.u))};
+ await more(trend);
+}
+async function more(trend){
+ const fl=$('#fl');
+ const q=query(collection(db,'posts'),where('status','==','approved'),orderBy(trend?'likeCount':'createdAt','desc'),...(lastDoc?[startAfter(lastDoc)]:[]),limit(8));
+ let s;try{s=await getDocs(q)}catch(e){fl.innerHTML=`<div class="empty">Index चाहिए: Console में दिख रहा Firestore index link खोलकर बनाएँ।<br><small>${esc(e.message)}</small></div>`;return}
+ if(!lastDoc)fl.innerHTML='';
+ if(!s.size&&!lastDoc){fl.innerHTML='<div class="empty">📷<br>अभी कोई Approved Post नहीं है</div>';return}
+ lastDoc=s.docs[s.docs.length-1]||lastDoc;
+ for(const d of s.docs)fl.append(await postEl({id:d.id,...d.data()}));
+ document.querySelector('#more')?.remove();
+ if(s.size===8){const b=document.createElement('button');b.id='more';b.className='btn g';b.style.cssText='display:block;margin:12px auto';b.textContent='और दिखाएँ';b.onclick=()=>more(trend);fl.after(b)}
+}
+async function postEl(p,own){
+ const u=await getU(p.uid),el=document.createElement('div');el.className='card post';
+ const lk=await getDoc(doc(db,'posts',p.id,'likes',me.uid)),sv=await getDoc(doc(db,'users',me.uid,'saves',p.id));
+ let liked=lk.exists(),saved=sv.exists(),lc=p.likeCount||0;
+ const tags=(p.caption||'').split(/(#\w+)/g).map(x=>x.startsWith('#')?`<span class="tag">${esc(x)}</span>`:esc(x)).join('');
+ el.innerHTML=`<div class="pad row sp"><div class="row" style="cursor:pointer" data-o><img class="av" src="${esc(u.photoURL||DEF)}"><div><b>@${esc(u.username)}</b> ${u.pro?'<span class="pro">PRO</span>':''}<div class="mut">${ts(p.createdAt)}</div></div></div>
+ ${p.uid===me.uid?'<button class="x" data-del>🗑</button>':`<button class="btn s g" data-f></button>`}</div>
+ <img class="ph" src="${esc(p.url)}" loading="lazy">
+ <div class="pad row sp"><div class="row" style="gap:16px;font-size:22px"><button data-l></button><button data-c>💬</button><button data-s>↗️</button></div><button data-sv style="font-size:22px"></button></div>
+ <div class="pad" style="padding-top:0"><b data-lc></b><div>${tags}</div>${own&&p.status!=='approved'?`<div class="mut" style="margin-top:6px">Status: <b>${p.status==='pending'?'⏳ Pending':'❌ Rejected'}</b> ${esc(p.reason||'')}</div>`:''}<div data-cm hidden></div></div>`;
+ const q=s=>el.querySelector(s),paint=()=>{q('[data-l]').textContent=liked?'❤️':'🤍';q('[data-lc]').textContent=lc+' likes';q('[data-sv]').textContent=saved?'🔖':'📑'};paint();
+ q('[data-o]').onclick=()=>go('user',p.uid);
+ q('[data-l]').onclick=async()=>{const b=writeBatch(db);const lr=doc(db,'posts',p.id,'likes',me.uid);
+  if(liked){b.delete(lr);b.update(doc(db,'posts',p.id),{likeCount:increment(-1)});lc--}else{b.set(lr,{at:serverTimestamp()});b.update(doc(db,'posts',p.id),{likeCount:increment(1)});lc++;notify(p.uid,'like','@'+prof.username+' ने आपकी फोटो Like की')}
+  liked=!liked;paint();b.commit().catch(()=>toast('Error'))};
+ q('[data-sv]').onclick=async()=>{const r=doc(db,'users',me.uid,'saves',p.id);saved?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});saved=!saved;paint()};
+ q('[data-s]').onclick=async()=>{const url=p.url;try{navigator.share?await navigator.share({title:'Creator Connect',text:p.caption,url}):(await navigator.clipboard.writeText(url),toast('Link copy हुआ'))}catch{}};
+ const del=q('[data-del]');if(del)del.onclick=async()=>{if(!confirm('फोटो Delete करें?'))return;await deleteDoc(doc(db,'posts',p.id));if(p.path)deleteObject(ref(st,p.path)).catch(()=>{});el.remove();toast('Delete हुआ')};
+ const fb=q('[data-f]');if(fb)followBtn(fb,p.uid,u);
+ q('[data-c]').onclick=()=>comments(q('[data-cm]'),p);
+ return el}
+async function comments(box,p){
+ if(!box.hidden){box.hidden=true;return}box.hidden=false;
+ box.innerHTML=`<div data-list></div><div class="row"><input placeholder="Comment लिखें..." maxlength="300"><button class="btn s">Send</button></div>`;
+ let reply=null;const inp=box.querySelector('input');
+ const un=onSnapshot(query(collection(db,'posts',p.id,'comments'),orderBy('createdAt','asc'),limit(100)),async s=>{
+  const l=box.querySelector('[data-list]');const top=s.docs.filter(d=>!d.data().parent),rep=s.docs.filter(d=>d.data().parent);
+  const h=async(d,sub)=>{const c=d.data(),u=await getU(c.uid);return`<div style="margin:8px 0 8px ${sub?24:0}px"><b>@${esc(u.username)}</b> ${esc(c.text)} <button class="mut" data-r="${d.id}" data-n="${esc(u.username)}">Reply</button>${c.uid===me.uid?`<button class="x" data-d="${d.id}">✕</button>`:''}</div>`};
+  let out='';for(const d of top){out+=await h(d,0);for(const r of rep.filter(r=>r.data().parent===d.id))out+=await h(r,1)}
+  l.innerHTML=out||'<p class="mut">पहला Comment करें</p>';
+  l.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{reply=b.dataset.r;inp.placeholder='@'+b.dataset.n+' को Reply...';inp.focus()});
+  l.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>deleteDoc(doc(db,'posts',p.id,'comments',b.dataset.d)))});
+ unsubs.push(un);
+ box.querySelector('button.btn').onclick=async()=>{const t=inp.value.trim();if(!t)return;
+  await addDoc(collection(db,'posts',p.id,'comments'),{uid:me.uid,text:t.slice(0,300),parent:reply,createdAt:serverTimestamp()});
+  notify(p.uid,'comment','@'+prof.username+' ने Comment किया: '+t.slice(0,40));inp.value='';reply=null;inp.placeholder='Comment लिखें...'}}
+/* ---------- FOLLOW ---------- */
+async function followBtn(btn,target,tu){
+ const fid=me.uid+'_'+target,fr=doc(db,'follows',fid);
+ const paint=async()=>{const s=await getDoc(fr);btn.textContent=!s.exists()?'Follow':s.data().status==='pending'?'Requested':'Following';btn.dataset.s=s.exists()?s.data().status:''};
+ await paint();
+ btn.onclick=async()=>{
+  if(btn.dataset.s){await deleteDoc(fr)}
+  else{const priv=(tu||await getU(target)).isPrivate;
+   await setDoc(fr,{from:me.uid,to:target,status:priv?'pending':'accepted',createdAt:serverTimestamp()});
+   notify(target,priv?'req':'follow','@'+prof.username+(priv?' ने Follow Request भेजी':' ने आपको Follow किया'))}
+  paint()}}
+/* ---------- CREATE ---------- */
+function create(m){
+ m.innerHTML=`<div class="pad"><h2>नई Post</h2><p class="mut">Admin Approval के बाद ही Public Feed में दिखेगी।</p>
+ <input type="file" id="cf" accept="image/jpeg,image/png,image/webp"><img id="cp" style="width:100%;border-radius:12px;display:none">
+ <textarea id="cc" rows="3" maxlength="500" placeholder="Caption और #hashtags"></textarea><button class="btn" id="cu" style="width:100%">Upload करें</button></div>`;
+ $('#cf').onchange=e=>{const f=e.target.files[0];if(f){$('#cp').src=URL.createObjectURL(f);$('#cp').style.display='block'}};
+ $('#cu').onclick=async()=>{const f=$('#cf').files[0];if(!f)return toast('फोटो चुनें');$('#cu').disabled=true;
+  try{const id=doc(collection(db,'posts')).id,path=`posts/${me.uid}/${id}`,url=await upload(f,path),cap=$('#cc').value.trim();
+   await setDoc(doc(db,'posts',id),{uid:me.uid,url,path,caption:cap,tags:(cap.match(/#\w+/g)||[]).map(t=>t.toLowerCase()),status:'pending',reason:'',likeCount:0,createdAt:serverTimestamp()});
+   toast('Upload हुआ — Admin Approval Pending ⏳');go('profile')}catch(e){toast(e.message);$('#cu').disabled=false}}}
+/* ---------- PROFILE ---------- */
+async function userPage(m,id){
+ const u=await getU(id),own=id===me.uid;
+ const cnt=async q=>(await getCountFromServer(q)).data().count;
+ const[fo,fg]=await Promise.all([cnt(query(collection(db,'follows'),where('to','==',id),where('status','==','accepted'))).catch(()=>0),cnt(query(collection(db,'follows'),where('from','==',id),where('status','==','accepted'))).catch(()=>0)]);
+ let canSee=own||!u.isPrivate;
+ if(!canSee){const s=await getDoc(doc(db,'follows',me.uid+'_'+id));canSee=s.exists()&&s.data().status==='accepted'}
+ let blocked=false;if(!own)blocked=(await getDoc(doc(db,'users',me.uid,'blocks',id))).exists();
+ m.innerHTML=`<div style="height:120px;background:${u.coverURL?`url(${esc(u.coverURL)}) center/cover`:'linear-gradient(90deg,var(--ac),var(--ac2))'}"></div>
+ <div class="pad"><div class="row" style="margin-top:-46px"><img class="av l" style="border:3px solid var(--bg)" src="${esc(u.photoURL||DEF)}"><div style="flex:1"></div>${own?'':'<button class="btn s" id="fb"></button><button class="btn s g" id="mg">💬</button>'}</div>
+ <h3>${esc(u.displayName)} ${u.pro?'<span class="pro">PRO</span>':''} ${u.isPrivate?'🔒':''}</h3><div class="mut">@${esc(u.username)}</div><p style="margin:8px 0">${esc(u.bio)}</p>
+ <div class="row" style="gap:24px"><span><b id="np">–</b> Posts</span><b style="cursor:pointer" id="l1">${fo} Followers</b><b style="cursor:pointer" id="l2">${fg} Following</b></div>
+ <div class="row" style="margin-top:12px;flex-wrap:wrap">${own?`<button class="btn s g" id="ed">✏️ Edit</button><button class="btn s g" id="pv">${u.isPrivate?'🔓 Public करें':'🔒 Private करें'}</button><button class="btn s g" id="rq">Requests</button><button class="btn s g" id="sa">Saved</button><button class="btn s g" id="lo">Logout</button>`:`<button class="btn s g" id="bl">${blocked?'Unblock':'Block'}</button><button class="btn s g" id="rp">Report</button>`}</div></div><div id="pg"></div>`;
+ if(!own){followBtn($('#fb'),id,u);$('#mg').onclick=()=>go('chat',id);
+  $('#bl').onclick=async()=>{const r=doc(db,'users',me.uid,'blocks',id);blocked?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});toast(blocked?'Unblock हुआ':'Block हुआ');go('user',id)};
+  $('#rp').onclick=async()=>{const r=prompt('Report का कारण?');if(r)await addDoc(collection(db,'reports'),{by:me.uid,target:id,reason:r.slice(0,300),createdAt:serverTimestamp()});r&&toast('Report भेजी गई')}}
+ else{$('#lo').onclick=()=>signOut(auth);
+  $('#pv').onclick=async()=>{await updateDoc(uref(id),{isPrivate:!u.isPrivate});go('profile')};
+  $('#ed').onclick=()=>edit(u);$('#rq').onclick=()=>requests(m);$('#sa').onclick=()=>saved();}
+ $('#l1').onclick=()=>list(id,'to');$('#l2').onclick=()=>list(id,'from');
+ const pg=$('#pg');
+ if(!canSee||blocked){$('#np').textContent='🔒';pg.innerHTML='<div class="empty">🔒<br>यह Account Private है।<br>Posts देखने के लिए Follow करें।</div>';return}
+ const s=await getDocs(own?query(collection(db,'posts'),where('uid','==',id)):query(collection(db,'posts'),where('uid','==',id),where('status','==','approved')));
+ const ps=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+ $('#np').textContent=ps.length;
+ pg.innerHTML=ps.length?`<div class="grid">${ps.map(p=>`<img src="${esc(p.url)}" data-p="${p.id}" style="${p.status!=='approved'?'opacity:.45':''}">`).join('')}</div>`:'<div class="empty">📷<br>अभी कोई Post नहीं</div>';
+ pg.querySelectorAll('[data-p]').forEach(i=>i.onclick=async()=>{const p=ps.find(x=>x.id===i.dataset.p),e=await postEl(p,own);pg.innerHTML='';const b=document.createElement('button');b.className='btn g s';b.style.margin='12px';b.textContent='← Grid';b.onclick=()=>go(own?'profile':'user',id);pg.append(b,e)})}
+function edit(u){const m=$('#v');m.innerHTML=`<div class="pad"><h3>Edit Profile</h3><input id="e1" value="${esc(u.displayName)}" maxlength="40"><textarea id="e2" rows="3" maxlength="150">${esc(u.bio)}</textarea>Profile फोटो<input type="file" id="e3" accept="image/*">Cover फोटो<input type="file" id="e4" accept="image/*"><button class="btn" id="e5" style="width:100%">Save</button></div>`;
+ $('#e5').onclick=async()=>{try{const d={displayName:$('#e1').value.trim()||u.displayName,bio:$('#e2').value.trim()};
+  if($('#e3').files[0])d.photoURL=await upload($('#e3').files[0],`avatars/${me.uid}/${Date.now()}`);
+  if($('#e4').files[0])d.coverURL=await upload($('#e4').files[0],`covers/${me.uid}/${Date.now()}`);
+  await updateDoc(uref(me.uid),d);toast('Save हुआ');go('profile')}catch(e){toast(e.message)}}}
+async function list(id,side){const s=await getDocs(query(collection(db,'follows'),where(side,'==',id),where('status','==','accepted')));
+ const other=side==='to'?'from':'to';const us=await Promise.all(s.docs.map(d=>getU(d.data()[other])));
+ const m=$('#v');m.innerHTML=`<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">${side==='to'?'Followers':'Following'}</h3>${us.map(u=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${u.id}"><img class="av" src="${esc(u.photoURL||DEF)}"><b>@${esc(u.username)}</b></div>`).join('')||'<p class="mut">कोई नहीं</p>'}</div>`;
+ $('#bk').onclick=()=>go('user',id);m.querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('user',e.dataset.u))}
+async function requests(m){const s=await getDocs(query(collection(db,'follows'),where('to','==',me.uid),where('status','==','pending')));
+ const us=await Promise.all(s.docs.map(async d=>({fid:d.id,...await getU(d.data().from)})));
+ m.innerHTML=`<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">Follow Requests</h3>${us.map(u=>`<div class="row sp" style="padding:8px 0"><div class="row"><img class="av" src="${esc(u.photoURL||DEF)}"><b>@${esc(u.username)}</b></div><div><button class="btn s" data-a="${u.fid}" data-u="${u.id}">Accept</button> <button class="btn s g" data-x="${u.fid}">Reject</button></div></div>`).join('')||'<p class="mut">कोई Request नहीं</p>'}</div>`;
+ $('#bk').onclick=()=>go('profile');
+ m.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{await updateDoc(doc(db,'follows',b.dataset.a),{status:'accepted'});notify(b.dataset.u,'accepted','@'+prof.username+' ने आपकी Request Accept की');requests(m)});
+ m.querySelectorAll('[data-x]').forEach(b=>b.onclick=async()=>{await deleteDoc(doc(db,'follows',b.dataset.x));requests(m)})}
+async function saved(){const s=await getDocs(collection(db,'users',me.uid,'saves'));const m=$('#v');m.innerHTML='<div class="pad"><button class="btn s g" id="bk">← वापस</button><h3 style="margin:10px 0">Saved Posts</h3></div>';$('#bk').onclick=()=>go('profile');
+ for(const d of s.docs){const p=await getDoc(doc(db,'posts',d.id));if(p.exists()&&p.data().status==='approved')m.append(await postEl({id:p.id,...p.data()}))}
+ if(!s.size)m.insertAdjacentHTML('beforeend','<div class="empty">कोई Saved Post नहीं</div>')}
+/* ---------- NOTIFICATIONS ---------- */
+async function notifs(m){
+ const s=await getDocs(query(collection(db,'users',me.uid,'notifications'),orderBy('createdAt','desc'),limit(50)));
+ m.innerHTML=`<div class="pad"><h3 style="margin-bottom:8px">🔔 Notifications</h3>${s.docs.map(d=>`<div class="card pad" style="margin:8px 0;${d.data().read?'opacity:.6':''}">${esc(d.data().text)}<div class="mut">${ts(d.data().createdAt)}</div></div>`).join('')||'<div class="empty">कोई Notification नहीं</div>'}</div>`;
+ s.docs.filter(d=>!d.data().read).forEach(d=>updateDoc(d.ref,{read:true}).catch(()=>{}))}
+/* ---------- MESSAGES ---------- */
+const cid=(a,b)=>[a,b].sort().join('_');
+function chats(m){
+ m.innerHTML=`<div class="pad"><input id="cs" placeholder="🔍 नया Chat: username खोजें"><div id="cr"></div><h3 style="margin:10px 0">Messages</h3><div id="cl"></div></div>`;
+ $('#cs').oninput=async e=>{const q=e.target.value.trim().toLowerCase();if(q.length<2)return $('#cr').innerHTML='';
+  const s=await getDocs(query(collection(db,'users'),where('username','>=',q),where('username','<=',q+'\uf8ff'),limit(6)));
+  $('#cr').innerHTML=s.docs.filter(d=>d.id!==me.uid).map(d=>`<div class="row" style="padding:8px 0;cursor:pointer" data-u="${d.id}"><img class="av" src="${esc(d.data().photoURL||DEF)}"><b>@${esc(d.data().username)}</b></div>`).join('');
+  $('#cr').querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>go('chat',e.dataset.u))};
+ unsubs.push(onSnapshot(query(collection(db,'chats'),where('members','array-contains',me.uid)),async s=>{
+  const rows=await Promise.all(s.docs.map(async d=>{const c=d.data(),o=c.members.find(x=>x!==me.uid);return{o,c,u:await getU(o)}}));
+  rows.sort((a,b)=>(b.c.lastAt?.seconds||0)-(a.c.lastAt?.seconds||0));
+  const l=$('#cl');if(!l)return;
+  l.innerHTML=rows.map(r=>{const un=r.c['unread_'+me.uid]||0,req=r.c.requestTo===me.uid&&!r.c.accepted;return`<div class="row sp" style="padding:10px 0;cursor:pointer" data-o="${r.o}"><div class="row"><div style="position:relative"><img class="av" src="${esc(r.u.photoURL||DEF)}">${r.u.online?'<span style="position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)"></span>':''}</div><div><b>@${esc(r.u.username)}</b> ${req?'<span class="pro">REQUEST</span>':''}<div class="mut">${esc((r.c.last||'').slice(0,40))}</div></div></div>${un?`<span class="badge" style="position:static">${un}</span>`:''}</div>`}).join('')||'<div class="empty">कोई Chat नहीं। ऊपर Search करें।</div>';
+  l.querySelectorAll('[data-o]').forEach(e=>e.onclick=()=>go('chat',e.dataset.o))}))}
+async function chat(m,oid){
+ const o=await getU(oid),id=cid(me.uid,oid),cr=doc(db,'chats',id);let replyTo=null;
+ const blockedByMe=(await getDoc(doc(db,'users',me.uid,'blocks',oid))).exists();
+ m.innerHTML=`<div class="pad row sp" style="border-bottom:1px solid var(--bd)"><div class="row"><button id="bk">←</button><img class="av" src="${esc(o.photoURL||DEF)}"><div><b>@${esc(o.username)}</b><div class="mut">${o.online?'🟢 Online':'Last seen '+ts(o.lastSeen)}</div></div></div><button class="btn s g" id="bl">${blockedByMe?'Unblock':'Block'}</button></div>
+ <div class="msgs" id="ml"></div><div style="height:110px"></div>
+ <div class="chatbar"><div class="mut" id="rpl" hidden></div><div class="mut" id="wl"></div><div class="row"><label style="font-size:22px;cursor:pointer">📎<input type="file" id="af" accept="image/*" hidden></label><input id="mi" placeholder="Message..." maxlength="1000"><button class="btn s" id="ms">भेजें</button></div></div>`;
+ $('#bk').onclick=()=>go('msgs');
+ $('#bl').onclick=async()=>{const r=doc(db,'users',me.uid,'blocks',oid);blockedByMe?await deleteDoc(r):await setDoc(r,{at:serverTimestamp()});toast('Updated');go('chat',oid)};
+ const usage=async()=>{const s=await getDoc(doc(db,'usage',me.uid+'_'+today()));const w=s.exists()?s.data().words:0;const max=prof.pro?(prof.wordLimit||600):LIMIT;$('#wl').textContent=`आज का उपयोग: ${w}/${max} words`;return{w,max}};usage();
+ unsubs.push(onSnapshot(query(collection(db,'chats',id,'messages'),orderBy('createdAt','asc'),limit(200)),s=>{
+  const l=$('#ml');if(!l)return;const by={};s.docs.forEach(d=>by[d.id]=d.data());
+  l.innerHTML=s.docs.map(d=>{const c=d.data(),mine=c.from===me.uid,r=c.replyTo&&by[c.replyTo];
+   return`<div class="m ${mine?'me':''}" data-i="${d.id}">${r?`<div class="rp">${esc((r.text||'📷').slice(0,50))}</div>`:''}${c.img?`<img src="${esc(c.img)}">`:''}${esc(c.text)}<div style="font-size:10px;opacity:.6">${ts(c.createdAt)}</div></div>`}).join('')||'<div class="empty">Chat शुरू करें 👋</div>';
+  l.querySelectorAll('.m').forEach(e=>e.ondblclick=()=>{replyTo=e.dataset.i;$('#rpl').hidden=false;$('#rpl').textContent='↩ Reply: '+(by[replyTo].text||'📷').slice(0,40)+' (रद्द: टैप करें)';$('#rpl').onclick=()=>{replyTo=null;$('#rpl').hidden=true}});
+  scrollTo(0,document.body.scrollHeight);
+  updateDoc(cr,{['unread_'+me.uid]:0}).catch(()=>{})}));
+ const send=async()=>{
+  const t=$('#mi').value.trim(),f=$('#af').files[0];if(!t&&!f)return;
+  const n=words(t),{w,max}=await usage();
+  if(w+n>max)return toast(`⚠️ आज की ${max} words की सीमा पूरी (${w} उपयोग)। PRO लें या कल आएँ।`);
+  $('#ms').disabled=true;
+  try{let img='';if(f)img=await upload(f,`chat/${id}/${Date.now()}`);
+   const snap=await getDoc(cr);const first=!snap.exists();
+   const b=writeBatch(db),mr=doc(collection(db,'chats',id,'messages'));
+   b.set(mr,{from:me.uid,text:t,img,replyTo,words:n,createdAt:serverTimestamp()});
+   const meta={members:[me.uid,oid],last:t||'📷 Photo',lastAt:serverTimestamp(),['unread_'+oid]:increment(1)};
+   if(first){meta.requestTo=oid;meta.accepted=false;meta['unread_'+me.uid]=0}
+   else if(snap.data().requestTo===me.uid&&!snap.data().accepted)meta.accepted=true;
+   b.set(cr,meta,{merge:true});
+   b.set(doc(db,'usage',me.uid+'_'+today()),{uid:me.uid,day:today(),words:increment(n)},{merge:true});
+   await b.commit();notify(oid,'msg','@'+prof.username+' का नया Message');
+   $('#mi').value='';$('#af').value='';replyTo=null;$('#rpl').hidden=true;usage();
+  }catch(e){toast(e.code==='permission-denied'?'Server ने रोका: Word सीमा या Block':'Error: '+e.message)}
+  $('#ms').disabled=false};
+ $('#ms').onclick=send;$('#mi').onkeydown=e=>e.key==='Enter'&&send()}
+function explore2(){}
+</script></body></html>
