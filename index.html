@@ -187,7 +187,7 @@
       </button>
 
       <p class="text-[10px] text-zinc-500 text-center leading-tight">
-        Powered by Firebase Auth. Videos play via official YouTube Player API.
+        Connected to Permanent Firebase Project plve-19ef3.
       </p>
     </div>
   </div>
@@ -494,18 +494,18 @@
   <script>
     /**
      * PLAYVERSE Platform Engine
-     * Authenticated strictly using user's real Firebase Project (ytcr-7b883)
+     * Authenticated strictly using Permanent Firebase Project: plve-19ef3
      */
 
-    // Real Firebase Project Credentials supplied by Developer
+    // PERMANENT FIREBASE PROJECT CONFIGURATION
     const firebaseConfig = {
-      apiKey: "AIzaSyDNmvJiJtM3VcHzFNGRHTYfrNn2TcGGDzk",
-      authDomain: "ytcr-7b883.firebaseapp.com",
-      databaseURL: "https://ytcr-7b883-default-rtdb.firebaseio.com",
-      projectId: "ytcr-7b883",
-      storageBucket: "ytcr-7b883.firebasestorage.app",
-      messagingSenderId: "1002788979175",
-      appId: "1:1002788979175:web:92fb36779a67d155adbd42"
+      apiKey: "AIzaSyAF3BPZd4KVfkaPLveQe8PTGSlzs0rngUE",
+      authDomain: "plve-19ef3.firebaseapp.com",
+      databaseURL: "https://plve-19ef3-default-rtdb.firebaseio.com",
+      projectId: "plve-19ef3",
+      storageBucket: "plve-19ef3.firebasestorage.app",
+      messagingSenderId: "972787857421",
+      appId: "1:972787857421:web:c3c4b1e9a65eb745173d44"
     };
 
     // Initialize Firebase once
@@ -517,12 +517,13 @@
     const storage = firebase.storage();
     const rtdb = firebase.database();
 
-    // Enable Offline Session Persistence so refresh keeps user logged in
+    // Enable Offline Session Persistence so page refresh retains login state
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn("Persistence error:", e));
 
     const state = {
       currentUser: null,
       userProfile: null,
+      isAdmin: false,
       currentPage: 'home',
       activeFilter: 'all',
       activeVideoId: null,
@@ -546,7 +547,6 @@
 
       // ================= 1. AUTH GATEWAY & ERROR DIAGNOSTICS =================
       setupAuthGate: function() {
-        // Display current domain for Firebase Authorized Domain verification
         const hostname = window.location.hostname || "localhost";
         const hostEl = document.getElementById('currentHostnameDisplay');
         if (hostEl) hostEl.innerText = hostname;
@@ -571,6 +571,14 @@
           if (user) {
             state.currentUser = user;
 
+            // Check Admin Custom Claims
+            try {
+              const tokenResult = await user.getIdTokenResult();
+              state.isAdmin = !!tokenResult.claims.admin;
+            } catch(e) {
+              state.isAdmin = false;
+            }
+
             // Sync user profile in Firestore
             try {
               const userRef = db.collection('users').doc(user.uid);
@@ -582,12 +590,14 @@
                   displayName: user.displayName || 'Playverse Creator',
                   photoURL: user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80',
                   channelLinked: false,
+                  role: state.isAdmin ? 'admin' : 'user',
                   createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await userRef.set(profile);
                 state.userProfile = profile;
               } else {
                 state.userProfile = snap.data();
+                if (state.userProfile.role === 'admin') state.isAdmin = true;
               }
             } catch (err) {
               console.warn("Firestore user sync note:", err.message);
@@ -624,6 +634,7 @@
             // Locked: User is not authenticated
             state.currentUser = null;
             state.userProfile = null;
+            state.isAdmin = false;
             mainApp.classList.add('hidden');
             authGate.classList.remove('hidden');
           }
@@ -639,7 +650,6 @@
         errBox.classList.remove('hidden');
         errText.innerText = error.message || "Failed to authenticate with Google.";
 
-        // Special handling for domain whitelist error
         if (error.code === 'auth/unauthorized-domain') {
           domainHint.classList.remove('hidden');
         } else {
@@ -670,12 +680,10 @@
         provider.setCustomParameters({ prompt: 'select_account' });
 
         try {
-          // Standard popup authentication
           await auth.signInWithPopup(provider);
         } catch (error) {
           console.warn("Popup attempt failed, evaluating error:", error);
           if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
-            // Mobile browser popup blocking fallback
             try {
               await auth.signInWithRedirect(provider);
             } catch (redirErr) {
@@ -706,13 +714,11 @@
         const file = event.target.files[0];
         if (!file || !state.currentUser) return;
 
-        // Size check (max 3MB)
         if (file.size > 3 * 1024 * 1024) {
           alert("Image size exceeds 3MB limit.");
           return;
         }
 
-        // File type validation
         if (!file.type.startsWith('image/')) {
           alert("Only valid image files (JPG, PNG, WebP) are allowed.");
           return;
@@ -740,10 +746,8 @@
             try {
               const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
               
-              // Update Auth Profile
               await state.currentUser.updateProfile({ photoURL: downloadURL });
 
-              // Update Firestore Profile
               await db.collection('users').doc(state.currentUser.uid).update({
                 photoURL: downloadURL,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -800,6 +804,7 @@
         else if (p === 'profile') this.renderProfile();
         else if (p === 'run-ads') this.renderRunAds();
         else if (p === 'dashboard') this.renderDashboard();
+        else if (p === 'admin') this.renderAdmin();
         else this.renderHome();
       },
 
@@ -1061,6 +1066,7 @@
                   <span class="text-[10px] px-2 py-0.5 rounded-full ${profile && profile.channelLinked ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-400'} font-semibold">
                     ${profile && profile.channelLinked ? 'Channel Linked' : 'No Channel Linked'}
                   </span>
+                  ${state.isAdmin ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold">Admin</span>` : ''}
                 </div>
               </div>
             </div>
@@ -1068,7 +1074,7 @@
             <!-- Avatar Upload Progress Indicator -->
             <div id="avatarUploadProgressContainer" class="hidden space-y-1">
               <div class="flex justify-between text-[10px] text-zinc-400">
-                <span>Uploading to Firebase Storage...</span>
+                <span>Uploading to Firebase Storage (plve-19ef3)...</span>
               </div>
               <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                 <div id="avatarProgressBar" class="bg-brand-accent h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
@@ -1087,6 +1093,13 @@
                 <span>Creator Studio</span>
               </button>
             </div>
+
+            ${state.isAdmin ? `
+              <button onclick="app.navigate('admin')" class="w-full py-3 px-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center justify-between">
+                <span class="flex items-center gap-2"><i class="ph ph-shield-check text-base"></i> Admin Moderation Panel</span>
+                <i class="ph ph-caret-right"></i>
+              </button>
+            ` : ''}
 
             ${profile && profile.channelLinked && profile.linkedChannel ? `
               <div class="p-3 rounded-2xl bg-brand-darkElevated/40 border border-brand-darkBorder space-y-2">
@@ -1231,7 +1244,7 @@
 
               <button type="submit" id="btnLaunchAd" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-red to-orange-600 text-white font-bold text-xs shadow-lg shadow-brand-red/30 transition flex items-center justify-center gap-1.5">
                 <i class="ph ph-lock-simple text-sm"></i>
-                <span>Pay via Razorpay & Submit</span>
+                <span>Submit Campaign</span>
               </button>
             </form>
           </div>
@@ -1248,7 +1261,7 @@
         e.preventDefault();
         const btn = document.getElementById('btnLaunchAd');
         btn.disabled = true;
-        btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Contacting Razorpay...`;
+        btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Submitting...`;
 
         try {
           const videoUrl = document.getElementById('adVideoUrl').value.trim();
@@ -1262,8 +1275,7 @@
           const budget = parseInt(document.getElementById('adBudgetSelect').value, 10);
           const duration = parseInt(document.getElementById('adDurationSelect').value, 10);
 
-          // Record direct campaign intent in Firestore
-          const campaignRef = await db.collection('campaigns').add({
+          await db.collection('campaigns').add({
             title: title,
             description: desc,
             youtubeId: ytId,
@@ -1280,17 +1292,86 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
 
-          alert("Ad campaign created and queued for review!");
+          alert("Ad campaign submitted successfully! Awaiting Admin Approval.");
           app.navigate('dashboard');
         } catch (err) {
           alert(err.message);
         } finally {
           btn.disabled = false;
-          btn.innerText = "Pay via Razorpay & Submit";
+          btn.innerText = "Submit Campaign";
         }
       },
 
-      // ================= 9. WATCH MODAL ENGINE =================
+      // ================= 9. ADMIN MODERATION VIEW =================
+      renderAdmin: async function() {
+        const c = document.getElementById('appContainer');
+        if (!state.currentUser || !state.isAdmin) {
+          c.innerHTML = `<div class="p-8 text-center text-xs text-rose-500 font-bold">Access Denied: Admins Only</div>`;
+          return;
+        }
+
+        c.innerHTML = `
+          <div class="p-4 space-y-4 w-full max-w-full overflow-hidden">
+            <div>
+              <span class="text-[10px] font-black uppercase text-amber-500">PLAYVERSE MODERATION</span>
+              <h2 class="text-xl font-black text-white">Pending Campaigns</h2>
+              <p class="text-xs text-zinc-400">Review submitted video campaigns before activating them in public feeds.</p>
+            </div>
+
+            <div id="adminQueueList" class="space-y-3">
+              <div class="text-center py-8"><i class="ph ph-spinner animate-spin text-2xl text-amber-500"></i></div>
+            </div>
+          </div>
+        `;
+
+        try {
+          const snap = await db.collection('campaigns').where('status', '==', 'PENDING_APPROVAL').get();
+          const queue = document.getElementById('adminQueueList');
+          if (snap.empty) {
+            queue.innerHTML = `<p class="text-center py-8 text-xs text-zinc-500">No campaigns waiting for moderation.</p>`;
+            return;
+          }
+
+          queue.innerHTML = snap.docs.map(doc => {
+            const d = doc.data();
+            return `
+              <div class="p-3.5 rounded-2xl bg-brand-darkElevated border border-brand-darkBorder space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-bold text-xs text-white truncate max-w-[200px]">${d.title}</h4>
+                  <span class="text-[10px] font-mono text-zinc-400">₹${d.budgetINR}</span>
+                </div>
+                <p class="text-[11px] text-zinc-400 line-clamp-2">${d.description}</p>
+                <div class="flex items-center justify-between pt-1 border-t border-brand-darkBorder/60 text-[10px]">
+                  <span class="text-zinc-500 truncate max-w-[150px]">${d.creatorEmail}</span>
+                  <div class="flex items-center gap-2">
+                    <button onclick="app.moderateCampaign('${doc.id}', 'ACTIVE')" class="px-3 py-1 rounded-lg bg-emerald-500 text-zinc-950 font-bold">Approve</button>
+                    <button onclick="app.moderateCampaign('${doc.id}', 'REJECTED')" class="px-3 py-1 rounded-lg bg-rose-500 text-white font-bold">Reject</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } catch (e) {
+          document.getElementById('adminQueueList').innerHTML = `<p class="text-xs text-brand-red">${e.message}</p>`;
+        }
+      },
+
+      moderateCampaign: async function(campaignId, status) {
+        try {
+          await db.collection('campaigns').doc(campaignId).update({
+            status: status,
+            reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            reviewedBy: state.currentUser.uid
+          });
+          alert(`Campaign marked as ${status}`);
+          this.renderAdmin();
+          this.fetchActiveAds();
+        } catch(e) {
+          alert("Moderation error: " + e.message);
+        }
+      },
+
+      // ================= 10. WATCH MODAL ENGINE =================
       openWatchModal: function(youtubeId, type) {
         state.activeVideoId = youtubeId;
         const modal = document.getElementById('watchModal');
@@ -1447,7 +1528,7 @@
         }
       },
 
-      // ================= 10. PUBLISH VIDEO & CHANNEL ACTIONS =================
+      // ================= 11. PUBLISH VIDEO & CHANNEL ACTIONS =================
       openPublishModal: function(type = 'long') {
         document.getElementById('publishModal').classList.remove('hidden');
         this.setPublishType(type);
@@ -1493,7 +1574,6 @@
         btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i>`;
 
         try {
-          // Client-side oEmbed resolution (Official, fast, free quota)
           const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${ytId}&format=json`;
           const resp = await fetch(oEmbedUrl);
           
@@ -1579,7 +1659,6 @@
         btn.innerText = "Verifying...";
 
         try {
-          // Parse handle or channel identifier
           let handle = input;
           if (input.includes('@')) {
             handle = '@' + input.split('@')[1].split('/')[0];
@@ -1679,4 +1758,4 @@
     });
   </script>
 </body>
-</html>
+  </html>
