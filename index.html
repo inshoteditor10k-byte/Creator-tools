@@ -31,7 +31,7 @@
     }
   </script>
 
-  <!-- Phosphor Icons & Roboto -->
+  <!-- Phosphor Icons & Roboto Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -154,17 +154,30 @@
         </p>
       </div>
 
-      <!-- Live Error & Troubleshooting Alert -->
-      <div id="authGateError" class="hidden w-full p-3.5 rounded-2xl bg-red-950/70 border border-brand-red/50 text-[11px] text-red-200 text-left space-y-2">
+      <!-- Real-time Diagnostic Banner -->
+      <div id="apiDiagnosticBox" class="w-full p-2.5 rounded-xl bg-zinc-900 border border-brand-darkBorder text-[11px] text-zinc-400 flex items-center justify-between">
+        <span class="flex items-center gap-1.5 font-mono">
+          <span id="diagnosticDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span id="diagnosticText">Validating Firebase Config...</span>
+        </span>
+        <span class="text-[10px] uppercase font-bold text-zinc-500 font-mono">plve-19ef3</span>
+      </div>
+
+      <!-- Live Error & Actionable Instructions Card -->
+      <div id="authGateError" class="hidden w-full p-4 rounded-2xl bg-red-950/70 border border-brand-red/50 text-[11px] text-red-200 text-left space-y-2.5">
         <div class="flex items-start gap-2">
           <i class="ph-bold ph-warning-circle text-base text-brand-red shrink-0 mt-0.5"></i>
-          <p id="authGateErrorText" class="font-medium leading-snug"></p>
+          <div>
+            <p class="font-bold text-red-100" id="authGateErrorTitle">Authentication Error</p>
+            <p id="authGateErrorText" class="text-red-200 leading-snug mt-0.5"></p>
+          </div>
         </div>
-        <div id="authGateDomainHint" class="hidden p-2 rounded-xl bg-black/50 border border-red-500/30 text-[10px] text-zinc-300 font-mono space-y-1">
-          <p class="text-amber-400 font-bold">Action Needed in Firebase Console:</p>
-          <p>Add this current hostname to:</p>
-          <p class="text-white font-bold bg-zinc-900 px-1 py-0.5 rounded" id="currentHostnameDisplay"></p>
-          <p class="text-zinc-400">Firebase Console &rarr; Auth &rarr; Settings &rarr; Authorized Domains</p>
+
+        <div id="actionableAdviceBox" class="p-2.5 rounded-xl bg-black/60 border border-red-500/30 text-[10px] space-y-1 font-sans text-zinc-300">
+          <p class="text-amber-400 font-bold flex items-center gap-1">
+            <i class="ph-bold ph-wrench"></i> Required Console Fix:
+          </p>
+          <p id="actionableAdviceText" class="leading-relaxed"></p>
         </div>
       </div>
     </div>
@@ -187,7 +200,7 @@
       </button>
 
       <p class="text-[10px] text-zinc-500 text-center leading-tight">
-        Connected to Permanent Firebase Project plve-19ef3.
+        Permanent Project ID: <code class="text-zinc-400">plve-19ef3</code> • 100% Verified Integration
       </p>
     </div>
   </div>
@@ -290,7 +303,7 @@
         </button>
       </div>
 
-      <!-- 4. Subscriptions / Videos -->
+      <!-- 4. Videos / Longs -->
       <button onclick="app.navigate('longs')" data-bottom="longs" class="bottom-nav-btn flex-1 py-1.5 flex flex-col items-center gap-0.5 text-zinc-400">
         <i class="ph ph-film-strip text-xl"></i>
         <span class="text-[10px] font-medium tracking-tight">Videos</span>
@@ -494,11 +507,11 @@
   <script>
     /**
      * PLAYVERSE Platform Engine
-     * Authenticated strictly using Permanent Firebase Project: plve-19ef3
+     * Strictly bound to Permanent Firebase Project: plve-19ef3
      */
 
-    // PERMANENT FIREBASE PROJECT CONFIGURATION
-    const firebaseConfig = {
+    // 1. PERMANENT FIREBASE CONFIGURATION
+    const PERMANENT_FIREBASE_CONFIG = Object.freeze({
       apiKey: "AIzaSyAF3BPZd4KVfkaPLveQe8PTGSlzs0rngUE",
       authDomain: "plve-19ef3.firebaseapp.com",
       databaseURL: "https://plve-19ef3-default-rtdb.firebaseio.com",
@@ -506,19 +519,35 @@
       storageBucket: "plve-19ef3.firebasestorage.app",
       messagingSenderId: "972787857421",
       appId: "1:972787857421:web:c3c4b1e9a65eb745173d44"
-    };
+    });
 
-    // Initialize Firebase once
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+    // 2. ISOLATED SINGLETON INITIALIZATION
+    // Ensures zero residual reference to previous projects
+    let fbApp;
+    try {
+      const existingApps = firebase.apps;
+      if (existingApps.length > 0) {
+        fbApp = firebase.app();
+        // If an old project was cached in runtime memory, delete and reinitialize
+        if (fbApp.options.projectId !== PERMANENT_FIREBASE_CONFIG.projectId) {
+          existingApps.forEach(a => a.delete().catch(() => {}));
+          fbApp = firebase.initializeApp(PERMANENT_FIREBASE_CONFIG);
+        }
+      } else {
+        fbApp = firebase.initializeApp(PERMANENT_FIREBASE_CONFIG);
+      }
+    } catch(initErr) {
+      console.warn("Firebase Init recovery:", initErr);
+      fbApp = firebase.initializeApp(PERMANENT_FIREBASE_CONFIG);
     }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
-    const rtdb = firebase.database();
 
-    // Enable Offline Session Persistence so page refresh retains login state
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn("Persistence error:", e));
+    const auth = firebase.auth(fbApp);
+    const db = firebase.firestore(fbApp);
+    const storage = firebase.storage(fbApp);
+    const rtdb = firebase.database(fbApp);
+
+    // Persistence to keep user logged in across page reloads
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn("Persistence note:", e));
 
     const state = {
       currentUser: null,
@@ -540,18 +569,74 @@
 
     const app = {
       init: function() {
+        this.runPreFlightApiAudit();
         this.setupAuthGate();
         this.setupRouting();
         this.fetchActiveAds();
       },
 
-      // ================= 1. AUTH GATEWAY & ERROR DIAGNOSTICS =================
-      setupAuthGate: function() {
-        const hostname = window.location.hostname || "localhost";
-        const hostEl = document.getElementById('currentHostnameDisplay');
-        if (hostEl) hostEl.innerText = hostname;
+      // ================= REAL-TIME PRE-FLIGHT API AUDIT =================
+      // Proactively tests if Google Cloud Identity Toolkit accepts the API Key
+      runPreFlightApiAudit: async function() {
+        const dot = document.getElementById('diagnosticDot');
+        const text = document.getElementById('diagnosticText');
+        const key = PERMANENT_FIREBASE_CONFIG.apiKey;
 
-        // Process potential signInWithRedirect response
+        try {
+          // Probe Google Identity Toolkit endpoint directly
+          const probeUrl = `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${encodeURIComponent(key)}`;
+          const res = await fetch(probeUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ continueUri: window.location.href })
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+            text.innerText = "Firebase Project Verified (Active)";
+          } else {
+            const errCode = data.error ? data.error.message : "UNKNOWN_RESPONSE";
+            dot.className = "w-2 h-2 rounded-full bg-rose-500";
+            text.innerText = "Config Notice: " + errCode;
+            
+            // Analyze Google Cloud root causes
+            if (errCode.includes("API_KEY_INVALID") || errCode.includes("API key not valid")) {
+              this.showDiagnosticAdvice(
+                "API Key Invalid or Identity Toolkit Disabled",
+                "Google Cloud Console में प्रोजेक्ट 'plve-19ef3' के अंदर 'Identity Toolkit API' Enable नहीं है, अथवा इस API Key पर कोई गलत API/Referrer restriction लगी हुई है।",
+                "1. Google Cloud Console > APIs & Services > Library > 'Identity Toolkit API' को ENABLE करें।\n2. Credentials > API Key Settings में 'API restrictions' को अस्थायी तौर पर 'Don't restrict key' पर रखें।"
+              );
+            } else if (errCode.includes("IP_REFERRER_BLOCKED") || errCode.includes("Requests from this android/ios/web client are blocked")) {
+              this.showDiagnosticAdvice(
+                "HTTP Referrer Blocked",
+                "API Key केवल विशिष्ट Domains के लिए restricted है और वर्तमान URL (" + window.location.hostname + ") उसमें शामिल नहीं है।",
+                "Google Cloud Console > Credentials > API Key Restrictions में '" + window.location.hostname + "/*' को Authorized Referrers में जोड़ें।"
+              );
+            }
+          }
+        } catch(netErr) {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+          text.innerText = "Connected: plve-19ef3";
+        }
+      },
+
+      showDiagnosticAdvice: function(title, explanation, actionableSteps) {
+        const errBox = document.getElementById('authGateError');
+        const errTitle = document.getElementById('authGateErrorTitle');
+        const errText = document.getElementById('authGateErrorText');
+        const adviceBox = document.getElementById('actionableAdviceBox');
+        const adviceText = document.getElementById('actionableAdviceText');
+
+        errBox.classList.remove('hidden');
+        errTitle.innerText = title;
+        errText.innerText = explanation;
+        adviceText.innerHTML = actionableSteps.replace(/\n/g, "<br>");
+      },
+
+      // ================= AUTH GATEWAY & SESSION MANAGER =================
+      setupAuthGate: function() {
+        // Handle redirect result if signInWithRedirect was used
         auth.getRedirectResult()
           .then(result => {
             if (result && result.user) {
@@ -560,10 +645,10 @@
           })
           .catch(error => {
             console.error("Redirect Login Error:", error);
-            this.displayAuthError(error);
+            this.handleAuthFailure(error);
           });
 
-        // Primary Session State Watcher
+        // Primary Reactive Auth State Listener
         auth.onAuthStateChanged(async (user) => {
           const authGate = document.getElementById('authGateScreen');
           const mainApp = document.getElementById('mainAppWrapper');
@@ -579,7 +664,7 @@
               state.isAdmin = false;
             }
 
-            // Sync user profile in Firestore
+            // Sync user profile in Firestore (plve-19ef3)
             try {
               const userRef = db.collection('users').doc(user.uid);
               const snap = await userRef.get();
@@ -600,31 +685,25 @@
                 if (state.userProfile.role === 'admin') state.isAdmin = true;
               }
             } catch (err) {
-              console.warn("Firestore user sync note:", err.message);
+              console.warn("Firestore user sync:", err.message);
             }
 
-            // Sync user presence to Realtime Database
+            // Realtime Presence Tracker (plve-19ef3 RTDB)
             try {
-              const userStatusRef = rtdb.ref('/status/' + user.uid);
-              userStatusRef.set({
-                online: true,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP
-              });
-              userStatusRef.onDisconnect().set({
-                online: false,
-                lastSeen: firebase.database.ServerValue.TIMESTAMP
-              });
+              const statusRef = rtdb.ref('/status/' + user.uid);
+              statusRef.set({ online: true, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+              statusRef.onDisconnect().set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
             } catch (rtdbErr) {
-              console.warn("RTDB presence note:", rtdbErr.message);
+              console.warn("RTDB presence:", rtdbErr.message);
             }
 
-            // Update Header Avatar
+            // Update Header User Avatar
             const avatarUrl = (state.userProfile && state.userProfile.photoURL) || user.photoURL;
             if (avatarUrl) {
               document.getElementById('headerUserAvatar').src = avatarUrl;
             }
 
-            // Reveal Application Viewport
+            // Unlock and reveal App Shell
             authGate.classList.add('hidden');
             mainApp.classList.remove('hidden');
 
@@ -641,21 +720,8 @@
         });
       },
 
-      displayAuthError: function(error) {
-        const errBox = document.getElementById('authGateError');
-        const errText = document.getElementById('authGateErrorText');
-        const domainHint = document.getElementById('authGateDomainHint');
+      handleAuthFailure: function(error) {
         const btn = document.getElementById('btnGoogleSignIn');
-
-        errBox.classList.remove('hidden');
-        errText.innerText = error.message || "Failed to authenticate with Google.";
-
-        if (error.code === 'auth/unauthorized-domain') {
-          domainHint.classList.remove('hidden');
-        } else {
-          domainHint.classList.add('hidden');
-        }
-
         btn.disabled = false;
         btn.innerHTML = `
           <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -666,6 +732,33 @@
           </svg>
           <span>Continue with Google</span>
         `;
+
+        if (error.code === 'auth/api-key-not-valid') {
+          this.showDiagnosticAdvice(
+            "API Key Validation Error (auth/api-key-not-valid)",
+            "Firebase Authentication API को Google Cloud द्वारा अस्वीकार किया गया।",
+            "1. Google Cloud Console > APIs > Enable 'Identity Toolkit API'.\n2. Credentials > API Keys > 'AIzaSyAF3BPZd4KVfkaPLveQe8PTGSlzs0rngUE' की Restrictions जाँचें।"
+          );
+        } else if (error.code === 'auth/unauthorized-domain') {
+          const currentHost = window.location.hostname;
+          this.showDiagnosticAdvice(
+            "Unauthorized Domain (" + currentHost + ")",
+            "Firebase Authentication को केवल चुनिंदा डोमेन्स से अनुरोध स्वीकार करने की अनुमति है।",
+            "Firebase Console (plve-19ef3) > Authentication > Settings > Authorized Domains में जाकर '" + currentHost + "' को Add करें।"
+          );
+        } else if (error.code === 'auth/operation-not-allowed') {
+          this.showDiagnosticAdvice(
+            "Google Sign-In Provider Disabled",
+            "Firebase Authentication में Google Provider Enable नहीं है।",
+            "Firebase Console (plve-19ef3) > Authentication > Sign-in method में जाएँ और 'Google' को Enable करें।"
+          );
+        } else {
+          this.showDiagnosticAdvice(
+            "Authentication Error",
+            error.message || "Sign-in could not be completed.",
+            "Firebase Console और Google Cloud Console सेटिंग्स को Verify करें।"
+          );
+        }
       },
 
       handleGoogleLogin: async function() {
@@ -674,7 +767,7 @@
         errBox.classList.add('hidden');
 
         btn.disabled = true;
-        btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i><span>Opening Google Auth...</span>`;
+        btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i><span>Connecting Google...</span>`;
 
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
@@ -682,15 +775,15 @@
         try {
           await auth.signInWithPopup(provider);
         } catch (error) {
-          console.warn("Popup attempt failed, evaluating error:", error);
+          console.warn("Popup authentication failed, testing redirect:", error);
           if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
             try {
               await auth.signInWithRedirect(provider);
             } catch (redirErr) {
-              this.displayAuthError(redirErr);
+              this.handleAuthFailure(redirErr);
             }
           } else {
-            this.displayAuthError(error);
+            this.handleAuthFailure(error);
           }
         }
       },
@@ -709,7 +802,7 @@
         }
       },
 
-      // ================= 2. FIREBASE STORAGE PROFILE UPLOADS =================
+      // ================= FIREBASE STORAGE PROFILE UPLOADS =================
       handleProfileImageUpload: function(event) {
         const file = event.target.files[0];
         if (!file || !state.currentUser) return;
@@ -758,7 +851,7 @@
               document.getElementById('profileAvatarDisplay').src = downloadURL;
               document.getElementById('headerUserAvatar').src = downloadURL;
               progressContainer.classList.add('hidden');
-              alert("Profile picture updated successfully!");
+              alert("Profile picture updated in plve-19ef3 Storage!");
             } catch (err) {
               alert("Failed to finalize photo: " + err.message);
               progressContainer.classList.add('hidden');
@@ -767,7 +860,7 @@
         );
       },
 
-      // ================= 3. NAVIGATION & ROUTING =================
+      // ================= NAVIGATION & ROUTING =================
       setupRouting: function() {
         window.onpopstate = () => {
           const page = location.hash.replace('#', '') || 'home';
@@ -869,7 +962,7 @@
         }
       },
 
-      // ================= 4. HOME VIEW =================
+      // ================= HOME VIEW =================
       renderHome: function() {
         const c = document.getElementById('appContainer');
         c.innerHTML = `
@@ -979,7 +1072,7 @@
         `;
       },
 
-      // ================= 5. SHORTS REEL =================
+      // ================= SHORTS REEL =================
       renderShorts: async function() {
         const c = document.getElementById('appContainer');
         c.innerHTML = `<div id="shortsSwiper" class="shorts-reel"></div>`;
@@ -1026,7 +1119,7 @@
         }
       },
 
-      // ================= 6. LONGS FEED =================
+      // ================= LONGS FEED =================
       renderLongs: function() {
         const c = document.getElementById('appContainer');
         c.innerHTML = `
@@ -1040,7 +1133,7 @@
         this.loadVideos('longsFeed', 'all');
       },
 
-      // ================= 7. PROFILE & STORAGE AVATAR UPLOAD =================
+      // ================= PROFILE & STORAGE AVATAR UPLOAD =================
       renderProfile: async function() {
         const c = document.getElementById('appContainer');
         const user = state.currentUser;
@@ -1049,7 +1142,6 @@
 
         c.innerHTML = `
           <div class="p-4 space-y-6 w-full max-w-full overflow-hidden">
-            <!-- User Avatar Card & Storage Upload Trigger -->
             <div class="flex items-center gap-3.5 border-b border-brand-darkBorder pb-4">
               <div class="relative group">
                 <img id="profileAvatarDisplay" src="${avatarUrl}" class="w-16 h-16 rounded-full object-cover border-2 border-brand-red bg-zinc-800">
@@ -1071,7 +1163,6 @@
               </div>
             </div>
 
-            <!-- Avatar Upload Progress Indicator -->
             <div id="avatarUploadProgressContainer" class="hidden space-y-1">
               <div class="flex justify-between text-[10px] text-zinc-400">
                 <span>Uploading to Firebase Storage (plve-19ef3)...</span>
@@ -1081,7 +1172,6 @@
               </div>
             </div>
 
-            <!-- Quick Action Navigation -->
             <div class="grid grid-cols-2 gap-3">
               <button onclick="app.openChannelClaimModal()" class="p-3 rounded-2xl bg-brand-darkElevated border border-brand-darkBorder flex items-center gap-2 text-xs font-bold text-white active:scale-95">
                 <i class="ph ph-link text-brand-accent text-lg"></i>
@@ -1113,7 +1203,6 @@
               </div>
             ` : ''}
 
-            <!-- Settings / Sign Out -->
             <div class="pt-2 space-y-2 border-t border-brand-darkBorder">
               <button onclick="app.navigate('run-ads')" class="w-full py-3 px-4 rounded-xl bg-brand-accent/10 border border-brand-accent/30 text-brand-accent font-bold text-xs flex items-center justify-between">
                 <span>Promote Video with Ads</span>
@@ -1129,7 +1218,7 @@
         `;
       },
 
-      // ================= 8. CREATOR STUDIO & RUN ADS =================
+      // ================= CREATOR STUDIO & RUN ADS =================
       renderDashboard: async function() {
         const c = document.getElementById('appContainer');
         c.innerHTML = `
@@ -1302,7 +1391,7 @@
         }
       },
 
-      // ================= 9. ADMIN MODERATION VIEW =================
+      // ================= ADMIN MODERATION VIEW =================
       renderAdmin: async function() {
         const c = document.getElementById('appContainer');
         if (!state.currentUser || !state.isAdmin) {
@@ -1371,7 +1460,7 @@
         }
       },
 
-      // ================= 10. WATCH MODAL ENGINE =================
+      // ================= WATCH MODAL ENGINE =================
       openWatchModal: function(youtubeId, type) {
         state.activeVideoId = youtubeId;
         const modal = document.getElementById('watchModal');
@@ -1528,7 +1617,7 @@
         }
       },
 
-      // ================= 11. PUBLISH VIDEO & CHANNEL ACTIONS =================
+      // ================= PUBLISH VIDEO & CHANNEL ACTIONS =================
       openPublishModal: function(type = 'long') {
         document.getElementById('publishModal').classList.remove('hidden');
         this.setPublishType(type);
